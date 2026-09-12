@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "java8.html", label: "Java 8" },
   { href: "java11.html", label: "Java 11" },
   { href: "java21.html", label: "Java 21" },
+  { href: "java25.html", label: "Java 25" },
   { href: "advanced.html", label: "Advanced" },
   { href: "interview.html", label: "Interview Qs" },
 ];
