@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Interview Questions — LearnJava</title>
+<meta name="description" content="Searchable, categorized bank of Java interview questions: core Java, OOP, collections, concurrency, Java 8+, exceptions, JVM.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero" style="padding-bottom:10px;">
+  <div class="container">
+    <span class="hero-badge">Practice</span>
+    <h1>Java Interview Questions</h1>
+    <p class="lead">Search or filter by category. Click a question to reveal the answer — the kind of Q&amp;A that shows up in real Java interviews.</p>
+  </div>
+</header>
+
+<main class="container">
+  <input type="text" class="search-box" id="interviewBank-search" placeholder="Search questions (e.g. 'HashMap', 'thread', 'final')…">
+  <div class="filter-bar">
+    <button class="filter-chip active" data-filter-for="interviewBank" data-cat="all">All</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="core">Core Java</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="oop">OOP</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="collections">Collections</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="concurrency">Concurrency</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="java8plus">Java 8+</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="exceptions">Exceptions</button>
+    <button class="filter-chip" data-filter-for="interviewBank" data-cat="jvm">JVM</button>
+  </div>
+
+  <div id="interviewBank"></div>
+
+  <div class="hero-cta" style="margin:40px 0;">
+    <a href="index.html" class="btn btn-ghost">← Back to Home</a>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+const INTERVIEW_DATA = [
+  // --- Core Java ---
+  { cat: "core", diff: "easy", q: "What is the difference between JDK, JRE, and JVM?",
+    a: "The JVM runs bytecode. The JRE bundles the JVM with the standard class libraries needed to run programs. The JDK adds development tools (compiler <code>javac</code>, debugger, etc.) on top of the JRE — you need the JDK to write and compile Java, but only the JRE (or a slimmed runtime) to run it." },
+  { cat: "core", diff: "easy", q: "What is the difference between `==` and `.equals()`?",
+    a: "`==` compares references for objects (or values for primitives). `.equals()` compares logical content, as defined by the class — <code>Object</code>'s default `.equals()` is reference equality unless overridden (as String, records, and most value classes do)." },
+  { cat: "core", diff: "easy", q: "Why is `String` immutable in Java?",
+    a: "Immutability enables safe string pooling/interning, makes String safe to share across threads without synchronization, and prevents security issues (e.g. a class path or URL string being changed after validation)." },
+  { cat: "core", diff: "medium", q: "What is the String pool and how does `intern()` interact with it?",
+    a: "String literals are stored in a special pool in the heap so identical literals share one object. `new String(...)` always creates a new object outside the pool; calling `.intern()` on it returns the pooled instance (creating one if it doesn't already exist)." },
+  { cat: "core", diff: "medium", q: "What does the `final` keyword mean for a variable, method, and class?",
+    a: "On a variable: its reference (or primitive value) can't be reassigned after initialization (the object it points to can still be mutable). On a method: it can't be overridden by subclasses. On a class: it can't be subclassed at all (e.g. <code>String</code>)." },
+  { cat: "core", diff: "medium", q: "What's the difference between `StringBuilder` and `StringBuffer`?",
+    a: "They have identical APIs for mutable string building, but `StringBuffer`'s methods are synchronized (thread-safe, slower) while `StringBuilder` is not (faster, use when no cross-thread sharing is needed)." },
+  { cat: "core", diff: "hard", q: "What's the difference between `int` and `Integer`, and where does autoboxing surprise people?",
+    a: "`int` is a primitive; `Integer` is its wrapper object. Autoboxing converts between them automatically, but cached `Integer` values (-128 to 127) are reused, so `Integer.valueOf(100) == Integer.valueOf(100)` is true while the same comparison at 200 is false — a classic == vs equals() trap." },
+  { cat: "core", diff: "hard", q: "How does the compiler handle `switch` on Strings under the hood?",
+    a: "It's syntactic sugar: the compiler generates a switch on `hashCode()` first, then verifies with `.equals()` to handle collisions safely — the source code you write never has to think about hashing." },
+
+  // --- OOP ---
+  { cat: "oop", diff: "easy", q: "What are the four pillars of OOP?",
+    a: "Encapsulation (bundling data with the methods that operate on it, hiding internals), Inheritance (reusing/extending behavior via a superclass), Polymorphism (one interface, many implementations), and Abstraction (exposing what an object does, not how)." },
+  { cat: "oop", diff: "easy", q: "What is method overloading vs overriding?",
+    a: "Overloading: same method name, different parameter list, resolved at compile time (compile-time/static polymorphism). Overriding: subclass redefines a superclass method with the identical signature, resolved at runtime based on the actual object type (runtime/dynamic polymorphism)." },
+  { cat: "oop", diff: "medium", q: "When would you choose an abstract class over an interface?",
+    a: "Use an abstract class when subclasses share common state or a partial implementation you want inherited (single inheritance only). Use an interface to describe a capability multiple, otherwise-unrelated classes can implement (multiple interfaces allowed); since Java 8, interfaces can even provide default method bodies, narrowing the gap." },
+  { cat: "oop", diff: "medium", q: "What is the difference between composition and inheritance, and why is 'favor composition over inheritance' common advice?",
+    a: "Inheritance creates a rigid IS-A relationship and can leak superclass implementation details into subclasses (fragile base class problem). Composition (HAS-A, holding a reference to another object and delegating to it) is more flexible — behavior can be swapped at runtime and doesn't break when the composed class changes internally." },
+  { cat: "oop", diff: "hard", q: "What is the diamond problem, and how does Java avoid it with interfaces?",
+    a: "The diamond problem arises when a class inherits conflicting implementations from two parents. Java avoids it for state by disallowing multiple class inheritance; for default methods from multiple interfaces, if two provide conflicting defaults for the same method, the implementing class MUST override the method explicitly — the compiler refuses to guess." },
+  { cat: "oop", diff: "hard", q: "Why can constructors not be overridden, and what does 'constructor chaining' mean?",
+    a: "Constructors aren't inherited (they're tied to their exact class), so 'overriding' doesn't apply — though a subclass constructor implicitly or explicitly calls a superclass constructor via `super(...)`. Constructor chaining is calling one constructor from another (via `this(...)` or `super(...)`) to avoid duplicating initialization logic." },
+
+  // --- Collections ---
+  { cat: "collections", diff: "easy", q: "What's the difference between `ArrayList` and `LinkedList`?",
+    a: "ArrayList is backed by a resizable array: O(1) random access, O(n) inserts/removes in the middle. LinkedList is a doubly-linked list: O(1) insert/remove at the ends (great for queues/deques) but O(n) random access." },
+  { cat: "collections", diff: "easy", q: "What's the difference between `HashMap` and `Hashtable`?",
+    a: "HashMap is unsynchronized and allows one null key and multiple null values; Hashtable is legacy, synchronized on every method (slower), and disallows null keys/values entirely. For thread-safe maps today, prefer `ConcurrentHashMap`." },
+  { cat: "collections", diff: "medium", q: "How does `HashMap` resolve hash collisions?",
+    a: "Each bucket holds a linked list (or, since Java 8, a red-black tree once a bucket exceeds a size threshold) of entries whose keys hashed to that bucket; `equals()` is used to distinguish entries within a bucket." },
+  { cat: "collections", diff: "medium", q: "What are the contract requirements between `equals()` and `hashCode()`?",
+    a: "If two objects are equal per `.equals()`, they MUST return the same `hashCode()`. The reverse isn't required (equal hash codes don't imply equal objects — that's a collision). Breaking this contract causes objects to 'disappear' from hash-based collections like HashMap/HashSet." },
+  { cat: "collections", diff: "medium", q: "What does `ConcurrentModificationException` mean, and how do you avoid it?",
+    a: "It's thrown when a collection is structurally modified while being iterated with a plain iterator (fail-fast behavior). Avoid it by using the iterator's own `.remove()`, a `CopyOnWriteArrayList`/`ConcurrentHashMap` for concurrent access, or by collecting changes and applying them after iteration." },
+  { cat: "collections", diff: "hard", q: "Why is `ConcurrentHashMap` faster than a `synchronized HashMap` under contention?",
+    a: "Instead of locking the entire map for every operation, ConcurrentHashMap uses fine-grained locking (historically per-segment; since Java 8, per-bin with CAS operations), so unrelated reads/writes on different keys can proceed in parallel." },
+  { cat: "collections", diff: "hard", q: "What's the difference between `Comparable` and `Comparator`?",
+    a: "`Comparable` (`compareTo`) defines a class's single natural ordering, implemented by the class itself. `Comparator` (`compare`) defines an external, swappable ordering — you can have many Comparators for the same class, useful for sorting the same objects different ways." },
+
+  // --- Concurrency ---
+  { cat: "concurrency", diff: "easy", q: "What is the difference between a process and a thread?",
+    a: "A process has its own isolated memory space; threads within the same process share heap memory but each has its own stack — making inter-thread communication cheaper but requiring synchronization to avoid data races." },
+  { cat: "concurrency", diff: "easy", q: "What does the `synchronized` keyword actually do?",
+    a: "It acquires the intrinsic lock (monitor) of an object (or the Class object for static methods) before entering the block/method, and releases it on exit — even if an exception is thrown — ensuring only one thread executes that critical section per lock at a time." },
+  { cat: "concurrency", diff: "medium", q: "What is a race condition, and how do you prevent one?",
+    a: "A race condition occurs when the outcome depends on the non-deterministic timing/interleaving of threads accessing shared mutable state. Prevent it with synchronization (locks, `synchronized`), atomic classes (`AtomicInteger`), immutable data, or thread-confinement (each thread has its own copy)." },
+  { cat: "concurrency", diff: "medium", q: "What is the difference between `wait()`/`notify()` and `Condition`?",
+    a: "`wait()`/`notify()`/`notifyAll()` are Object monitor methods usable only inside a `synchronized` block on that object. `Condition` (from `java.util.concurrent.locks`) works with explicit `Lock`s, supports multiple independent wait-sets per lock, and offers more flexible signaling." },
+  { cat: "concurrency", diff: "hard", q: "What problem do virtual threads (Java 21) solve that thread pools didn't?",
+    a: "Platform thread pools cap concurrency because each thread is an expensive OS resource; blocking a pooled thread on I/O wastes it. Virtual threads are cheap (JVM-managed, millions possible) and automatically 'unmount' from their carrier thread while blocked on I/O, so simple blocking-style code scales like async code without the callback complexity." },
+  { cat: "concurrency", diff: "hard", q: "What is a deadlock, and what four conditions must hold for one to occur?",
+    a: "A deadlock is a cycle of threads each waiting on a resource held by the next. It requires: mutual exclusion (resources aren't shareable), hold-and-wait (holding one resource while waiting for another), no preemption (resources can't be forcibly taken), and circular wait. Breaking any one prevents deadlock — e.g. always acquiring locks in a fixed global order removes circular wait." },
+  { cat: "concurrency", diff: "hard", q: "What does `volatile` guarantee, and what does it NOT guarantee?",
+    a: "`volatile` guarantees visibility (writes are immediately visible to other threads, no stale caching) and ordering (via happens-before) for that variable. It does NOT guarantee atomicity for compound operations like `count++` — that still needs a lock or an Atomic class." },
+
+  // --- Java 8+ ---
+  { cat: "java8plus", diff: "easy", q: "What problem do lambda expressions solve?",
+    a: "They let you pass behavior as a value without the boilerplate of an anonymous inner class implementing a functional interface — shorter, and it clarifies intent (e.g. sorting logic reads as logic, not ceremony)." },
+  { cat: "java8plus", diff: "easy", q: "What's the difference between `map()` and `flatMap()` on a Stream?",
+    a: "`map()` transforms each element 1-to-1. `flatMap()` transforms each element into its own stream and then flattens all of those into a single stream — used when each input maps to zero or more outputs (e.g. a List<List<T>> to List<T>)." },
+  { cat: "java8plus", diff: "medium", q: "Why can a stream only be consumed once?",
+    a: "A stream models a pipeline of operations over a source, not a data structure itself; once a terminal operation runs, the underlying iteration is exhausted. Calling another terminal operation on the same stream throws `IllegalStateException` — create a new stream from the source to reprocess it." },
+  { cat: "java8plus", diff: "medium", q: "What is the difference between intermediate and terminal stream operations?",
+    a: "Intermediate operations (`filter`, `map`, `sorted`, `distinct`) are lazy and return a new Stream, building up a pipeline. Terminal operations (`collect`, `forEach`, `reduce`, `count`) trigger actual execution of the whole pipeline and produce a non-stream result or side effect." },
+  { cat: "java8plus", diff: "hard", q: "How would you use `Collectors.groupingBy` with a downstream collector?",
+    a: "Example: <code>employees.stream().collect(Collectors.groupingBy(Employee::getDept, Collectors.averagingDouble(Employee::getSalary)))</code> groups by department and, within each group, applies the downstream collector (here, average salary) instead of collecting the raw list." },
+  { cat: "java8plus", diff: "hard", q: "Why should you avoid using `Optional` as a method parameter or class field?",
+    a: "Optional was designed as a return type signaling 'may be absent'. As a field it adds serialization/overhead problems and doesn't play well with frameworks; as a parameter it just pushes the null-check problem one level and complicates overloading — a null check or an overloaded method is usually clearer." },
+
+  // --- Exceptions ---
+  { cat: "exceptions", diff: "easy", q: "What's the difference between checked and unchecked exceptions?",
+    a: "Checked exceptions (subclasses of `Exception` excluding `RuntimeException`) must be declared with `throws` or caught — the compiler enforces handling. Unchecked exceptions (`RuntimeException` and subclasses, plus `Error`) don't require this, typically representing programming bugs or unrecoverable conditions." },
+  { cat: "exceptions", diff: "easy", q: "What is the purpose of `finally`?",
+    a: "Code in `finally` runs whether the try block completes normally, throws, or even returns — used for guaranteed cleanup (closing resources, releasing locks) though `try-with-resources` is now preferred for `AutoCloseable` resources." },
+  { cat: "exceptions", diff: "medium", q: "Can you catch an `Error` like `OutOfMemoryError`? Should you?",
+    a: "Technically yes — `Error` is a `Throwable`, catchable like any exception. You generally shouldn't: Errors represent conditions an application typically can't recover from (JVM-level failures), and catching them can mask a system that's already in an unstable state." },
+  { cat: "exceptions", diff: "medium", q: "What is exception chaining and why does it matter?",
+    a: "Wrapping a lower-level exception inside a higher-level one via the `cause` constructor argument (`throw new ServiceException(\"failed\", e)`) preserves the original stack trace and root cause while letting each layer throw exceptions meaningful to its own abstraction level." },
+  { cat: "exceptions", diff: "hard", q: "What happens if both a `try` block and its `finally` block throw an exception?",
+    a: "The exception thrown by `finally` suppresses/replaces the one from `try` — the original is lost unless explicitly captured (which is exactly what try-with-resources' suppressed-exception mechanism, `Throwable.getSuppressed()`, was introduced to fix)." },
+  { cat: "exceptions", diff: "hard", q: "Why is it bad practice to catch `Exception` (or `Throwable`) broadly?",
+    a: "It silently swallows unrelated bugs (NullPointerException, ClassCastException) alongside the specific failure you meant to handle, hides programming errors that should crash loudly during development, and makes debugging much harder — catch the most specific exception type you can meaningfully recover from." },
+
+  // --- JVM ---
+  { cat: "jvm", diff: "easy", q: "What is bytecode and why does Java compile to it instead of native machine code?",
+    a: "Bytecode is a platform-independent intermediate instruction set that the JVM interprets or JIT-compiles. It's why the same `.class` file runs unmodified on any OS/CPU with a compatible JVM — 'write once, run anywhere'." },
+  { cat: "jvm", diff: "easy", q: "What is the difference between stack and heap memory?",
+    a: "Each thread gets its own stack, storing method call frames and local primitive/reference variables — fast, automatically reclaimed when a method returns. The heap is shared across all threads and stores every object; it's managed by the garbage collector." },
+  { cat: "jvm", diff: "medium", q: "What is JIT compilation?",
+    a: "The Just-In-Time compiler monitors bytecode execution and compiles 'hot' methods (called frequently) directly into optimized native machine code at runtime, combining the portability of bytecode with near-native performance for hot paths." },
+  { cat: "jvm", diff: "medium", q: "What are GC roots, and why do they matter for garbage collection?",
+    a: "GC roots are references guaranteed to be reachable — active thread stacks, static fields, JNI references. The GC treats any object unreachable from a GC root (directly or transitively) as garbage and eligible for collection, regardless of internal reference cycles between otherwise-unreachable objects." },
+  { cat: "jvm", diff: "hard", q: "What's the difference between a minor GC and a major/full GC?",
+    a: "A minor GC collects only the young generation (where most objects die quickly) and is fast and frequent. A major/full GC also (or only) collects the old generation, is far more expensive, and pausing longer — tuning usually aims to minimize how often full GCs are triggered." },
+  { cat: "jvm", diff: "hard", q: "What is a `ClassLoader`, and what is the delegation model?",
+    a: "A ClassLoader loads `.class` bytecode into the JVM at runtime. The delegation model has each loader ask its parent to load a class first (Bootstrap → Platform/Extension → Application/System), falling back to loading it itself only if the parent can't — preventing core classes like `java.lang.Object` from being silently overridden by application code." },
+];
+</script>
+<script src="js/quiz.js"></script>
+<script src="js/main.js"></script>
+<script>document.addEventListener("DOMContentLoaded", () => buildAccordion("interviewBank", INTERVIEW_DATA));</script>
+</body>
+</html>

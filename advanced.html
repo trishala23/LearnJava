@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Java — LearnJava</title>
+<meta name="description" content="Advanced Java: collections internals, generics, concurrency, JVM memory & GC, design patterns, NIO.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero" style="padding-bottom:10px;">
+  <div class="container">
+    <span class="hero-badge">Level 3</span>
+    <h1>Advanced Topics</h1>
+    <p class="lead">What separates "knows the syntax" from "understands the runtime": internals, concurrency, memory, and patterns.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="topic reveal-up" id="collections">
+    <h2>1. Collections Framework — Internals</h2>
+    <p class="section-lead">Knowing <em>how</em> each implementation works explains its performance characteristics.</p>
+    <table>
+      <thead><tr><th>Implementation</th><th>Backed by</th><th>get</th><th>add</th><th>contains</th></tr></thead>
+      <tbody>
+        <tr><td><code>ArrayList</code></td><td>Resizable array</td><td>O(1)</td><td>O(1) amortized</td><td>O(n)</td></tr>
+        <tr><td><code>LinkedList</code></td><td>Doubly-linked nodes</td><td>O(n)</td><td>O(1) at ends</td><td>O(n)</td></tr>
+        <tr><td><code>HashMap</code></td><td>Array of buckets (linked list / red-black tree)</td><td>O(1) avg</td><td>O(1) avg</td><td>O(1) avg (key)</td></tr>
+        <tr><td><code>TreeMap</code></td><td>Red-black tree</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td></tr>
+        <tr><td><code>HashSet</code></td><td>HashMap under the hood</td><td>—</td><td>O(1) avg</td><td>O(1) avg</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><strong>HashMap since Java 8:</strong> when a bucket's linked list grows past 8 entries (and the table is large enough), it converts to a red-black tree, bounding worst-case lookup at O(log n) instead of O(n).</div>
+    <pre><code>// Fail-fast iteration: mutating a collection while iterating throws
+// ConcurrentModificationException — unless you use the Iterator's own remove()
+Iterator&lt;String&gt; it = list.iterator();
+while (it.hasNext()) {
+    if (it.next().isEmpty()) it.remove(); // safe
+}</code></pre>
+    <button class="mark-complete" data-section="advanced-1">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="generics">
+    <h2>2. Generics</h2>
+    <p class="section-lead">Compile-time type safety without casting — implemented via <strong>type erasure</strong> (generic type info doesn't exist at runtime).</p>
+    <pre><code>class Box&lt;T&gt; {
+    private T value;
+    void set(T value) { this.value = value; }
+    T get() { return value; }
+}
+
+// Bounded wildcards — PECS: Producer Extends, Consumer Super
+void printAll(List&lt;? extends Number&gt; nums) {   // producer: read-only, any Number subtype
+    for (Number n : nums) System.out.println(n);
+}
+void addIntegers(List&lt;? super Integer&gt; list) {  // consumer: safe to write Integers
+    list.add(42);
+}</code></pre>
+    <div class="note warn"><strong>Type erasure means:</strong> you can't do <code>new T()</code>, can't check <code>instanceof List&lt;String&gt;</code>, and can't have two overloads that differ only by generic type parameter.</div>
+    <button class="mark-complete" data-section="advanced-2">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="concurrency">
+    <h2>3. Concurrency</h2>
+    <p class="section-lead">From raw <code>Thread</code>s to structured task management.</p>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Thread / synchronized</button>
+        <button class="code-tab-btn">ExecutorService</button>
+        <button class="code-tab-btn">CompletableFuture</button>
+        <button class="code-tab-btn">Locks</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>class Counter {
+    private int count = 0;
+    synchronized void increment() { count++; } // one thread at a time
+}
+
+Thread t = new Thread(() -> System.out.println("Running"));
+t.start();
+t.join(); // wait for it to finish</code></pre></div>
+      <div class="code-tab-panel"><pre><code>ExecutorService pool = Executors.newFixedThreadPool(4);
+Future&lt;Integer&gt; future = pool.submit(() -> 2 + 2);
+System.out.println(future.get()); // blocks until done
+pool.shutdown();</code></pre></div>
+      <div class="code-tab-panel"><pre><code>CompletableFuture.supplyAsync(() -> fetchUser())
+    .thenApply(User::getName)
+    .thenAccept(System.out::println)
+    .exceptionally(ex -> { System.out.println("Failed: " + ex); return null; });</code></pre></div>
+      <div class="code-tab-panel"><pre><code>ReentrantLock lock = new ReentrantLock();
+lock.lock();
+try {
+    // critical section
+} finally {
+    lock.unlock(); // always release in finally
+}</code></pre></div>
+    </div>
+    <div class="note"><strong>synchronized vs Lock:</strong> <code>ReentrantLock</code> adds tryLock (non-blocking), fairness policies, and interruptible waits that the <code>synchronized</code> keyword can't express.</div>
+    <button class="mark-complete" data-section="advanced-3">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="jvm-memory">
+    <h2>4. JVM Memory Model</h2>
+    <p class="section-lead">Objects live on the <strong>heap</strong>; method calls and local variables live on each thread's <strong>stack</strong>; class metadata lives in <strong>metaspace</strong>.</p>
+
+    <div class="heap-viz">
+      <div class="heap-block heap-young">Young Gen<br><small>new objects, minor GC</small></div>
+      <div class="heap-block heap-old">Old Gen<br><small>long-lived objects, major GC</small></div>
+      <div class="heap-block heap-meta">Metaspace<br><small>class metadata (off-heap)</small></div>
+    </div>
+
+    <div class="diagram">
+      <div class="diagram-box"><strong>Stack</strong>per-thread<br>frames, locals</div>
+      <div class="diagram-box"><strong>Heap</strong>shared<br>all objects</div>
+      <div class="diagram-box"><strong>PC Register</strong>per-thread<br>current instruction</div>
+    </div>
+    <button class="mark-complete" data-section="advanced-4">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="gc">
+    <h2>5. Garbage Collection</h2>
+    <p class="section-lead">The GC reclaims heap memory no longer reachable from GC roots. Modern collectors (G1, the Java 9+ default) work incrementally to minimize pause times.</p>
+    <div class="diagram">
+      <div class="diagram-box" style="min-width:220px;">
+        <strong>Sweeping unreachable objects</strong><br>
+        <span class="gc-particle" style="animation-delay:0s"></span>
+        <span class="gc-particle" style="animation-delay:.2s"></span>
+        <span class="gc-particle" style="animation-delay:.4s"></span>
+        <span class="gc-particle" style="animation-delay:.6s;background:#888;"></span>
+        <span class="gc-particle" style="animation-delay:.8s"></span>
+        <span class="gc-particle" style="animation-delay:1s;background:#888;"></span>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Collector</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td>Serial GC</td><td>Small heaps, single-threaded apps</td></tr>
+        <tr><td>Parallel GC</td><td>Throughput-focused batch jobs</td></tr>
+        <tr><td>G1 (default since 9)</td><td>Balanced pause-time + throughput on large heaps</td></tr>
+        <tr><td>ZGC / Shenandoah</td><td>Ultra-low pause times, very large heaps</td></tr>
+      </tbody>
+    </table>
+    <button class="mark-complete" data-section="advanced-5">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="design-patterns">
+    <h2>6. Design Patterns</h2>
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Singleton</button>
+        <button class="code-tab-btn">Builder</button>
+        <button class="code-tab-btn">Factory</button>
+        <button class="code-tab-btn">Observer</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>enum Singleton {                  // enum singleton: thread-safe, serialization-safe
+    INSTANCE;
+    void doWork() { System.out.println("Working"); }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>Pizza pizza = new Pizza.Builder()
+    .size("Large")
+    .topping("Cheese")
+    .topping("Olives")
+    .build();</code></pre></div>
+      <div class="code-tab-panel"><pre><code>interface Shape { void draw(); }
+
+class ShapeFactory {
+    static Shape create(String type) {
+        return switch (type) {
+            case "circle" -> new Circle();
+            case "square" -> new Square();
+            default -> throw new IllegalArgumentException(type);
+        };
+    }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>interface Observer { void update(String event); }
+
+class EventBus {
+    private final List&lt;Observer&gt; observers = new ArrayList&lt;&gt;();
+    void subscribe(Observer o) { observers.add(o); }
+    void publish(String event) { observers.forEach(o -> o.update(event)); }
+}</code></pre></div>
+    </div>
+    <button class="mark-complete" data-section="advanced-6">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="nio">
+    <h2>7. I/O &amp; NIO</h2>
+    <p class="section-lead">Classic <code>java.io</code> is stream-based and blocking; <code>java.nio</code> adds buffers, channels, and non-blocking selectors for scalable I/O.</p>
+    <pre><code>// java.nio.file — the modern way to work with files
+Path path = Path.of("data.txt");
+List&lt;String&gt; lines = Files.readAllLines(path);
+Files.walk(Path.of(".")).filter(Files::isRegularFile).forEach(System.out::println);</code></pre>
+    <button class="mark-complete" data-section="advanced-7">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="quiz">
+    <h2>Quick Check</h2>
+    <div class="quiz-box" id="advancedQuiz"></div>
+  </section>
+
+  <div class="hero-cta" style="margin:40px 0;">
+    <a href="interview.html" class="btn btn-primary">Next: Interview Questions →</a>
+  </div>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+const QUIZ_DATA = [
+  { q: "Since Java 8, what happens to a HashMap bucket once its linked list grows past a threshold (default 8)?", options: ["The map throws an exception", "It converts to a red-black tree for O(log n) worst case", "The map doubles in size only", "Nothing changes"], correct: 1,
+    explain: "Treeification bounds worst-case lookup time when many keys hash to the same bucket." },
+  { q: "What is 'type erasure' in Java generics?", options: ["Generic types are checked only at runtime", "Generic type information is removed after compile-time checking", "Generics are compiled to separate classes per type", "Wildcards are erased but not type parameters"], correct: 1,
+    explain: "The JVM sees roughly the same bytecode regardless of the generic type argument used at compile time." },
+  { q: "What does `ReentrantLock` offer that `synchronized` does not?", options: ["Nothing, they're identical", "tryLock(), fairness, and interruptible waits", "Automatic deadlock prevention", "Faster execution in all cases"], correct: 1,
+    explain: "ReentrantLock is more flexible but requires manually unlocking in a finally block." },
+  { q: "In the JVM memory model, where do local variables and method call frames live?", options: ["Heap", "Metaspace", "Stack (per thread)", "Code cache"], correct: 2,
+    explain: "Each thread has its own stack of frames; objects themselves live on the shared heap." },
+  { q: "Which GC is the default in modern JDKs (9+) aiming to balance throughput and pause time?", options: ["Serial GC", "G1", "Epsilon GC", "CMS"], correct: 1,
+    explain: "G1 (Garbage-First) became the default collector starting with Java 9." },
+];
+</script>
+<script src="js/quiz.js"></script>
+<script src="js/main.js"></script>
+<script>document.addEventListener("DOMContentLoaded", () => buildQuiz("advancedQuiz", QUIZ_DATA));</script>
+</body>
+</html>

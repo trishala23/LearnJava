@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 21 Features — LearnJava</title>
+<meta name="description" content="Java 21: records, sealed classes, pattern matching, record patterns, virtual threads, sequenced collections.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero" style="padding-bottom:10px;">
+  <div class="container">
+    <span class="hero-badge">2023 · Latest LTS</span>
+    <h1>Java 21 Features</h1>
+    <p class="lead">Records, sealed hierarchies, and pattern matching finally click together — plus virtual threads, which change how you think about concurrency entirely.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="topic reveal-up" id="records">
+    <h2>1. Records (Java 16+, everywhere by 21)</h2>
+    <p class="section-lead">A record is an immutable data carrier: constructor, accessors, <code>equals</code>/<code>hashCode</code>/<code>toString</code> generated for you.</p>
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Before: a POJO</button>
+        <button class="code-tab-btn">With a record</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>final class Point {
+    private final int x, y;
+    Point(int x, int y) { this.x = x; this.y = y; }
+    int x() { return x; }
+    int y() { return y; }
+    @Override public boolean equals(Object o) { /* ~10 lines */ }
+    @Override public int hashCode() { /* ... */ }
+    @Override public String toString() { /* ... */ }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>record Point(int x, int y) { }
+
+Point p = new Point(3, 4);
+System.out.println(p);        // Point[x=3, y=4]
+System.out.println(p.x());    // 3
+<button class="run-btn" data-target="out-record">▶ Run</button></code></pre>
+        <div class="console-output" id="out-record" data-output="Point[x=3, y=4]
+3" style="display:none;"></div>
+      </div>
+    </div>
+    <button class="mark-complete" data-section="java21-1">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="sealed">
+    <h2>2. Sealed Classes &amp; Interfaces</h2>
+    <p class="section-lead">A sealed type declares exactly which classes may extend/implement it — giving the compiler (and your pattern matches) a closed, exhaustive set of cases.</p>
+    <pre><code>sealed interface Shape permits Circle, Square, Triangle { }
+
+record Circle(double radius) implements Shape { }
+record Square(double side) implements Shape { }
+record Triangle(double base, double height) implements Shape { }</code></pre>
+    <button class="mark-complete" data-section="java21-2">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="pattern-matching">
+    <h2>3. Pattern Matching for <code>switch</code> &amp; Record Patterns</h2>
+    <p class="section-lead">Combine a sealed hierarchy with pattern matching and the compiler can verify every case is handled — no <code>default</code> needed.</p>
+    <pre><code>double area = switch (shape) {
+    case Circle c -> Math.PI * c.radius() * c.radius();
+    case Square s -> s.side() * s.side();
+    case Triangle t -> 0.5 * t.base() * t.height();
+    // no default needed — Shape is sealed and every case is covered
+};
+
+// Record patterns (Java 21): destructure directly in the case label
+String describe(Object obj) {
+    return switch (obj) {
+        case Circle(double r) when r > 10 -> "Big circle, r=" + r;
+        case Circle(double r) -> "Circle, r=" + r;
+        case null -> "Nothing here";
+        default -> "Some other shape";
+    };
+}
+<button class="run-btn" data-target="out-pattern">▶ Run</button></code></pre>
+    <div class="console-output" id="out-pattern" data-output="area = 78.53981633974483
+Circle, r=3.0" style="display:none;"></div>
+    <button class="mark-complete" data-section="java21-3">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="virtual-threads">
+    <h2>4. Virtual Threads (Project Loom)</h2>
+    <p class="section-lead">Platform threads are expensive (each wraps an OS thread, ~1MB stack). Virtual threads are cheap, JVM-managed threads — you can spin up <strong>millions</strong> of them, one per request, with plain blocking-style code.</p>
+
+    <div class="diagram" style="flex-direction:column; align-items:stretch;">
+      <div class="thread-lane"><span style="width:130px;">Platform thread</span><div class="thread-track"><div class="thread-dot"></div></div><small>heavy, OS-scheduled</small></div>
+      <div class="thread-lane"><span style="width:130px;">Virtual thread</span><div class="thread-track"><div class="thread-dot virtual"></div></div><small>light, JVM-scheduled onto a small pool of carrier threads</small></div>
+    </div>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Platform thread pool</button>
+        <button class="code-tab-btn">Virtual threads</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>ExecutorService pool = Executors.newFixedThreadPool(200);
+for (int i = 0; i < 10_000; i++) {
+    pool.submit(() -> handleRequest());   // queues once threads run out
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>try (ExecutorService vExec = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (int i = 0; i < 10_000; i++) {
+        vExec.submit(() -> handleRequest()); // one virtual thread each — cheap
+    }
+} // waits for all tasks on close</code></pre></div>
+    </div>
+    <div class="note tip"><strong>Mental model:</strong> virtual threads don't make CPU-bound code faster — they remove the cost of <em>blocking</em> (I/O waits) so a server can handle far more concurrent connections with ordinary, readable, blocking-style code instead of reactive/async chains.</div>
+    <button class="mark-complete" data-section="java21-4">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="sequenced">
+    <h2>5. Sequenced Collections</h2>
+    <p class="section-lead">A new <code>SequencedCollection</code>/<code>SequencedMap</code> interface family gives every ordered collection a consistent way to reach both ends.</p>
+    <pre><code>List&lt;Integer&gt; list = new ArrayList&lt;&gt;(List.of(1, 2, 3));
+list.getFirst();     // 1
+list.getLast();      // 3
+list.addFirst(0);     // [0, 1, 2, 3]
+list.reversed();      // a reversed VIEW, no copy needed</code></pre>
+    <button class="mark-complete" data-section="java21-5">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="text-blocks">
+    <h2>6. Text Blocks</h2>
+    <p class="section-lead">Multi-line string literals (standardized in Java 15) — no more <code>"...\n" +</code> chains for JSON, SQL, or HTML.</p>
+    <pre><code>String json = """
+    {
+      "name": "Duke",
+      "language": "Java"
+    }
+    """;</code></pre>
+    <button class="mark-complete" data-section="java21-6">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="structured-concurrency">
+    <h2>7. Structured Concurrency (preview)</h2>
+    <p class="section-lead">Treats a group of related tasks running on different threads as a single unit of work — if one subtask fails, the others are cancelled automatically.</p>
+    <pre><code>try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    Supplier&lt;String&gt; user  = scope.fork(() -> fetchUser());
+    Supplier&lt;String&gt; order = scope.fork(() -> fetchOrder());
+
+    scope.join();            // wait for both
+    scope.throwIfFailed();    // propagate any failure
+
+    render(user.get(), order.get());
+}</code></pre>
+    <div class="note warn">Preview feature in Java 21 — API surface may still change in later releases.</div>
+    <button class="mark-complete" data-section="java21-7">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="quiz">
+    <h2>Quick Check</h2>
+    <div class="quiz-box" id="java21Quiz"></div>
+  </section>
+
+  <div class="hero-cta" style="margin:40px 0;">
+    <a href="advanced.html" class="btn btn-primary">Next: Advanced Topics →</a>
+  </div>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+const QUIZ_DATA = [
+  { q: "What do you get for free by declaring a `record`?", options: ["A mutable setter for every field", "equals/hashCode/toString and accessors", "Automatic thread safety for all methods", "Reflection-free serialization"], correct: 1,
+    explain: "Records auto-generate a canonical constructor, accessors, equals, hashCode, and toString." },
+  { q: "What does a `sealed` interface let the compiler do that a normal interface can't?", options: ["Make methods private", "Verify a switch over its permitted subtypes is exhaustive", "Add default methods", "Skip implementing methods"], correct: 1,
+    explain: "Because the compiler knows every permitted subtype, a switch with a case per subtype needs no default." },
+  { q: "Virtual threads primarily help with...", options: ["Making CPU-bound math faster", "Reducing the cost of thread blocking during I/O, enabling huge concurrency", "Replacing the garbage collector", "Compiling code faster"], correct: 1,
+    explain: "Virtual threads are cheap to block/unblock, letting simple blocking code scale to huge numbers of concurrent I/O-bound tasks." },
+  { q: "Which method does `SequencedCollection` add to every List?", options: [".first() only", ".getFirst() / .getLast() / .reversed()", ".sort() only", "Nothing — it's Set-only"], correct: 1,
+    explain: "SequencedCollection standardizes getFirst/getLast/addFirst/addLast/reversed across Lists, Deques, and LinkedHashSet." },
+  { q: "In `case Circle(double r) when r > 10 ->`, what is the `when` clause?", options: ["A syntax error", "A guard condition refining the pattern match", "A loop", "A comment"], correct: 1,
+    explain: "Guarded patterns add a boolean condition on top of a type/record pattern match." },
+];
+</script>
+<script src="js/quiz.js"></script>
+<script src="js/main.js"></script>
+<script>document.addEventListener("DOMContentLoaded", () => buildQuiz("java21Quiz", QUIZ_DATA));</script>
+</body>
+</html>

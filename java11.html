@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 11 Features — LearnJava</title>
+<meta name="description" content="Java 11: var, new String and Files methods, HttpClient, single-file source launching.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero" style="padding-bottom:10px;">
+  <div class="container">
+    <span class="hero-badge">2018 · Long-Term Support</span>
+    <h1>Java 11 Features</h1>
+    <p class="lead">The first LTS after Java 8 — smaller, pragmatic quality-of-life upgrades rather than a paradigm shift.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="topic reveal-up" id="var">
+    <h2>1. Local Variable Type Inference (<code>var</code>)</h2>
+    <p class="section-lead">Introduced in Java 10, extended to lambda parameters in Java 11. The compiler infers the type — <code>var</code> is <strong>not</strong> dynamic typing.</p>
+    <pre><code>var name = "Duke";              // inferred: String
+var list = new ArrayList&lt;String&gt;(); // inferred: ArrayList&lt;String&gt;
+var total = 0;                    // inferred: int
+
+for (var i = 0; i < 5; i++) { /* i is int */ }
+
+// Java 11: var allowed in lambda parameters (to add annotations, e.g.)
+list.forEach((var s) -> System.out.println(s));</code></pre>
+    <div class="note warn"><strong>Limits:</strong> <code>var</code> only works for local variables with an initializer — not for fields, method parameters (pre-11 style), or return types. <code>var x;</code> and <code>var y = null;</code> don't compile.</div>
+    <button class="mark-complete" data-section="java11-1">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="string-methods">
+    <h2>2. New String Methods</h2>
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">isBlank / strip</button>
+        <button class="code-tab-btn">lines / repeat</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>"  ".isBlank();          // true  (whitespace-only)
+"".isEmpty();              // true  (length 0 — pre-existing)
+"  hi  ".strip();          // "hi"  (Unicode-aware trim)
+"  hi  ".stripLeading();   // "hi  "
+"  hi  ".stripTrailing();  // "  hi"
+<button class="run-btn" data-target="out-strip">▶ Run</button></code></pre>
+        <div class="console-output" id="out-strip" data-output="true
+&quot;hi&quot;" style="display:none;"></div>
+      </div>
+      <div class="code-tab-panel"><pre><code>"line1\nline2\nline3".lines().count(); // 3
+"ab".repeat(3);                          // "ababab"</code></pre></div>
+    </div>
+    <button class="mark-complete" data-section="java11-2">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="httpclient">
+    <h2>3. The Standard <code>HttpClient</code></h2>
+    <p class="section-lead">A modern, fluent HTTP client (incubated in 9, standardized in 11) replacing the clunky <code>HttpURLConnection</code> — with sync <em>and</em> async support, plus HTTP/2.</p>
+    <pre><code>HttpClient client = HttpClient.newHttpClient();
+
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("https://api.example.com/users/1"))
+    .GET()
+    .build();
+
+// Synchronous
+HttpResponse&lt;String&gt; response =
+    client.send(request, HttpResponse.BodyHandlers.ofString());
+System.out.println(response.statusCode());
+
+// Asynchronous
+client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+      .thenApply(HttpResponse::body)
+      .thenAccept(System.out::println);</code></pre>
+    <button class="mark-complete" data-section="java11-3">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="single-file">
+    <h2>4. Single-File Source-Code Launching</h2>
+    <p class="section-lead">Run a <code>.java</code> file directly — no separate <code>javac</code> step — great for scripts and quick experiments.</p>
+    <pre><code>$ java Hello.java
+Hello, Java!</code></pre>
+    <div class="note tip">Under the hood the source is compiled to memory and executed in one step; it's meant for single-file programs, not multi-class projects.</div>
+    <button class="mark-complete" data-section="java11-4">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="files-api">
+    <h2>5. <code>Files</code> convenience methods</h2>
+    <pre><code>String content = Files.readString(Path.of("notes.txt"));
+Files.writeString(Path.of("out.txt"), "Hello, file!");
+
+// Also new in 11: Collection.toArray(IntFunction)
+String[] arr = List.of("a", "b", "c").toArray(String[]::new);</code></pre>
+    <button class="mark-complete" data-section="java11-5">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="removed">
+    <h2>6. What Was Removed</h2>
+    <p class="section-lead">Java 11 dropped Java EE &amp; CORBA modules that shipped with earlier JDKs (JAX-WS, JAXB, JAF, Common Annotations) — apps depending on them now need external Maven/Gradle dependencies.</p>
+    <table>
+      <thead><tr><th>Removed module</th><th>Replacement</th></tr></thead>
+      <tbody>
+        <tr><td><code>java.xml.bind</code> (JAXB)</td><td><code>org.glassfish.jaxb:jaxb-runtime</code></td></tr>
+        <tr><td><code>java.xml.ws</code> (JAX-WS)</td><td><code>com.sun.xml.ws:jaxws-ri</code></td></tr>
+        <tr><td>Java Web Start / <code>javaws</code></td><td>Third-party launchers (e.g. OpenWebStart)</td></tr>
+      </tbody>
+    </table>
+    <button class="mark-complete" data-section="java11-6">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="quiz">
+    <h2>Quick Check</h2>
+    <div class="quiz-box" id="java11Quiz"></div>
+  </section>
+
+  <div class="hero-cta" style="margin:40px 0;">
+    <a href="java21.html" class="btn btn-primary">Next: Java 21 Features →</a>
+  </div>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+const QUIZ_DATA = [
+  { q: "`var` in Java is best described as...", options: ["Dynamic typing, like JavaScript", "Compile-time type inference for local variables", "A way to declare untyped fields", "Only usable inside lambdas"], correct: 1,
+    explain: "The compiler still assigns a fixed static type at compile time — var is sugar, not dynamic typing." },
+  { q: "Which method checks whether a String is empty OR only whitespace?", options: [".isEmpty()", ".isBlank()", ".strip()", ".trim()"], correct: 1,
+    explain: "isBlank() (Java 11) returns true for '' and for strings made only of whitespace." },
+  { q: "What does Java 11's standardized HttpClient support that the old HttpURLConnection did not do well?", options: ["Only HTTP/1.0", "Built-in async requests and HTTP/2", "File compression", "Sending emails"], correct: 1,
+    explain: "HttpClient offers a fluent builder plus sync/async APIs and HTTP/2 support." },
+  { q: "`java Hello.java` in Java 11+ lets you...", options: ["Compile only, no run", "Compile and run a single source file in one step", "Only run pre-compiled .class files", "Debug remotely"], correct: 1,
+    explain: "Single-file source launching compiles in-memory and runs immediately — handy for scripts." },
+];
+</script>
+<script src="js/quiz.js"></script>
+<script src="js/main.js"></script>
+<script>document.addEventListener("DOMContentLoaded", () => buildQuiz("java11Quiz", QUIZ_DATA));</script>
+</body>
+</html>
