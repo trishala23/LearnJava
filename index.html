@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnJava — Interactive Java Tutorial, Java 8 to 21</title>
+<meta name="description" content="An interactive, animated Java tutorial: basics, Java 8, Java 11, Java 21, advanced topics and interview questions.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero">
+  <div class="floaters" aria-hidden="true">
+    <span style="left:10%; animation-delay:0s;">☕</span>
+    <span style="left:25%; animation-delay:2s;">{ }</span>
+    <span style="left:45%; animation-delay:4s;">λ</span>
+    <span style="left:65%; animation-delay:1s;">☕</span>
+    <span style="left:80%; animation-delay:3s;">;</span>
+    <span style="left:92%; animation-delay:5s;">{ }</span>
+  </div>
+  <div class="container">
+    <span class="hero-badge">Free · Interactive · Animated</span>
+    <h1>Learn <span style="color:var(--brand)">Java</span> —
+      <span class="typewriter" data-words='["from scratch.","to Java 8 streams.","to Java 11 & Java 21.","for interviews."]'></span>
+    </h1>
+    <p class="lead">
+      A hands-on tutorial that takes you from <code>public static void main</code>
+      to virtual threads and sealed interfaces — with animated diagrams,
+      live-feel code demos, and quizzes that check what actually stuck.
+    </p>
+    <div class="hero-cta">
+      <a href="basics.html" class="btn btn-primary">▶ Start with the Basics</a>
+      <a href="interview.html" class="btn btn-ghost">🎯 Jump to Interview Qs</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="topic reveal-up">
+    <h2>Your learning path</h2>
+    <p class="section-lead">Six stops from fundamentals to advanced, plus a dedicated interview-prep hub. Progress is tracked locally in your browser as you mark topics complete.</p>
+
+    <div class="grid grid-3">
+      <a href="basics.html" class="card">
+        <span class="emoji">🧱</span>
+        <h3>Java Basics</h3>
+        <p>Syntax, variables, control flow, OOP, exceptions, and core collections.</p>
+        <span class="tag">Start here</span>
+        <div class="progress-mini" data-progress-key="basics" data-total="8"><span></span></div>
+      </a>
+      <a href="java8.html" class="card">
+        <span class="emoji">λ</span>
+        <h3>Java 8</h3>
+        <p>Lambdas, Streams, Optional, method references, and the new Date/Time API.</p>
+        <span class="tag">Functional style</span>
+        <div class="progress-mini" data-progress-key="java8" data-total="7"><span></span></div>
+      </a>
+      <a href="java11.html" class="card">
+        <span class="emoji">🧩</span>
+        <h3>Java 11</h3>
+        <p><code>var</code>, new String/Files methods, HttpClient, single-file launch.</p>
+        <span class="tag">LTS release</span>
+        <div class="progress-mini" data-progress-key="java11" data-total="6"><span></span></div>
+      </a>
+      <a href="java21.html" class="card">
+        <span class="emoji">🧵</span>
+        <h3>Java 21</h3>
+        <p>Records, sealed types, pattern matching, and virtual threads.</p>
+        <span class="tag">Latest LTS</span>
+        <div class="progress-mini" data-progress-key="java21" data-total="7"><span></span></div>
+      </a>
+      <a href="advanced.html" class="card">
+        <span class="emoji">🧠</span>
+        <h3>Advanced Topics</h3>
+        <p>Collections internals, generics, concurrency, JVM memory & GC, design patterns.</p>
+        <span class="tag">Deep dive</span>
+        <div class="progress-mini" data-progress-key="advanced" data-total="7"><span></span></div>
+      </a>
+      <a href="interview.html" class="card">
+        <span class="emoji">🎯</span>
+        <h3>Interview Questions</h3>
+        <p>Searchable, categorized Q&amp;A bank covering everything above.</p>
+        <span class="tag">Practice</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="topic reveal-up">
+    <h2>Why this tutorial?</h2>
+    <div class="grid grid-3">
+      <div class="card reveal">
+        <span class="emoji">🎬</span>
+        <h3>Animated, not static</h3>
+        <p>JVM memory, garbage collection, thread scheduling, and stream pipelines are shown as live diagrams, not just paragraphs.</p>
+      </div>
+      <div class="card reveal">
+        <span class="emoji">🖱️</span>
+        <h3>Interactive by default</h3>
+        <p>Tabbed code comparisons, a fake-but-faithful "Run" button, quizzes with instant feedback, and a filterable interview bank.</p>
+      </div>
+      <div class="card reveal">
+        <span class="emoji">📈</span>
+        <h3>Version-aware</h3>
+        <p>See exactly what changed release to release — from Java 8's lambdas to Java 21's virtual threads — instead of one flat wall of syntax.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="topic reveal-up">
+    <h2>Java release timeline</h2>
+    <p class="section-lead">A quick map of where each covered version sits.</p>
+    <div class="timeline">
+      <div class="timeline-item">
+        <h4>Java 8 <span class="tag">2014</span></h4>
+        <p>Lambdas, Streams, the <code>java.time</code> API, default interface methods — the release that made Java feel functional.</p>
+      </div>
+      <div class="timeline-item">
+        <h4>Java 11 <span class="tag">2018 · LTS</span></h4>
+        <p><code>var</code>, a modern <code>HttpClient</code>, new String/Files convenience methods, single-file source launching.</p>
+      </div>
+      <div class="timeline-item">
+        <h4>Java 17 <span class="tag">2021 · LTS</span></h4>
+        <p>Sealed classes and text blocks become standard — stepping stones to Java 21's pattern matching.</p>
+      </div>
+      <div class="timeline-item">
+        <h4>Java 21 <span class="tag">2023 · LTS</span></h4>
+        <p>Record patterns, pattern matching for <code>switch</code>, virtual threads, and sequenced collections.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
