@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 25 Features — LearnJava</title>
+<meta name="description" content="Java 25: compact source files, module imports, flexible constructor bodies, scoped values, structured concurrency, primitive type patterns, and Generational Shenandoah.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<header class="hero" style="padding-bottom:10px;">
+  <div class="container">
+    <span class="hero-badge">2025 · Latest LTS</span>
+    <h1>Java 25 Features</h1>
+    <p class="lead">The newest long-term support release: it lowers the barrier for beginners (a one-line "Hello, World!") while finalizing tools — scoped values, flexible constructors — that mostly matter once you're writing serious concurrent code.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="topic reveal-up" id="compact-source">
+    <h2>1. Compact Source Files &amp; Instance Main Methods</h2>
+    <p class="section-lead">Finalized from a multi-release preview: a first Java program no longer needs a class, an access modifier, `static`, or a `String[]` parameter.</p>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Classic HelloWorld.java</button>
+        <button class="code-tab-btn">Java 25 compact source</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java!");
+    }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>void main() {
+    println("Hello, Java!");   // System.out.println is implicitly imported
+}
+<button class="run-btn" data-target="out-compact">▶ Run</button></code></pre>
+        <div class="console-output" id="out-compact" data-output="Hello, Java!" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="note tip"><strong>Still real Java:</strong> the compiler wraps this in an implicit, unnamed class behind the scenes — it's meant to flatten the learning curve and shrink scripts, not to replace normal classes in real applications.</div>
+    <button class="mark-complete" data-section="java25-1">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="module-imports">
+    <h2>2. Module Import Declarations</h2>
+    <p class="section-lead">Import every exported package of a module in one line — handy in compact source files and for exploratory/scripting code.</p>
+    <pre><code>import module java.base;   // pulls in java.util, java.io, java.lang, etc.
+
+void main() {
+    List&lt;Integer&gt; nums = new ArrayList&lt;&gt;(List.of(3, 1, 2));
+    Collections.sort(nums);
+    println(nums);
+}</code></pre>
+    <div class="note warn">A module import can't be used to selectively hide/rename types — for a shared library's public API you'll still want targeted <code>import</code> statements to keep things explicit.</div>
+    <button class="mark-complete" data-section="java25-2">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="flexible-constructors">
+    <h2>3. Flexible Constructor Bodies</h2>
+    <p class="section-lead">Before Java 25, <code>this(...)</code>/<code>super(...)</code> had to be the very first statement in a constructor. Now you can validate or compute values first — as long as you don't touch the instance being constructed before calling the super constructor.</p>
+    <pre><code>class PositiveNumber {
+    private final int value;
+
+    PositiveNumber(int value) {
+        if (value <= 0) {
+            throw new IllegalArgumentException("must be positive: " + value);
+        }
+        this.value = value;
+    }
+}
+
+class Base {
+    Base(int x) { System.out.println("Base got " + x); }
+}
+
+class Derived extends Base {
+    Derived(int raw) {
+        int normalized = Math.max(raw, 0);   // allowed before super() now
+        super(normalized);
+        System.out.println("Derived ready");
+    }
+}</code></pre>
+    <button class="mark-complete" data-section="java25-3">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="scoped-values">
+    <h2>4. Scoped Values (finalized)</h2>
+    <p class="section-lead">A safer, immutable alternative to <code>ThreadLocal</code> — a value is bound for the duration of one call, automatically visible to everything it calls (including child virtual threads), and automatically un-bound when that call returns.</p>
+    <pre><code>static final ScopedValue&lt;String&gt; CURRENT_USER = ScopedValue.newInstance();
+
+void handleRequest(String user) {
+    ScopedValue.where(CURRENT_USER, user)
+               .run(() -> processOrder());   // CURRENT_USER only visible inside run()
+}
+
+void processOrder() {
+    System.out.println("Processing for " + CURRENT_USER.get());
+}</code></pre>
+    <div class="note tip"><strong>Why not just ThreadLocal?</strong> ThreadLocal values are mutable, can leak between pooled threads if you forget to clear them, and don't propagate cheaply to the huge numbers of virtual threads a structured-concurrency task might spawn. Scoped values are write-once, automatically scoped, and designed with virtual threads in mind.</div>
+    <button class="mark-complete" data-section="java25-4">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="structured-concurrency-25">
+    <h2>5. Structured Concurrency (still in preview)</h2>
+    <p class="section-lead">Continuing from <a href="java21.html#structured-concurrency">Java 21's preview</a>, the API keeps evolving — the core idea is unchanged: subtasks forked in a scope are joined together, and failure in one cancels the rest.</p>
+    <pre><code>try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
+    Subtask&lt;String&gt; user  = scope.fork(() -> fetchUser());
+    Subtask&lt;String&gt; order = scope.fork(() -> fetchOrder());
+
+    scope.join();
+    render(user.get(), order.get());
+}</code></pre>
+    <div class="note warn">Still a preview feature in Java 25 (API shape has changed between 21 and 25) — expect it to keep moving until it's finalized in a future release.</div>
+    <button class="mark-complete" data-section="java25-5">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="primitive-patterns">
+    <h2>6. Primitive Types in Patterns, <code>instanceof</code>, and <code>switch</code> (preview)</h2>
+    <p class="section-lead">Pattern matching (see <a href="java21.html#pattern-matching">Java 21</a>) extends to primitives — no more manual boxing just to fit a case label.</p>
+    <pre><code>static String classify(int code) {
+    return switch (code) {
+        case 0 -> "zero";
+        case int c when c < 0 -> "negative";
+        case int c -> "positive: " + c;
+    };
+}
+
+Object o = 42;
+if (o instanceof int i) {
+    System.out.println("int value: " + i);
+}</code></pre>
+    <button class="mark-complete" data-section="java25-6">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="runtime-improvements">
+    <h2>7. Runtime &amp; GC Improvements</h2>
+    <p class="section-lead">Java 25 isn't only new syntax — it tightens up the runtime itself.</p>
+    <table>
+      <thead><tr><th>Change</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td>Generational Shenandoah (production)</td><td>Applies generational collection to the low-pause Shenandoah GC, improving throughput on top of its already-tiny pause times.</td></tr>
+        <tr><td>Compact Object Headers</td><td>Shrinks the per-object header from 12–16 bytes toward 8, reducing heap footprint across the board.</td></tr>
+        <tr><td>Ahead-of-Time command-line ergonomics</td><td>Makes AOT-cached startup (introduced in 24) easier to opt into without hand-tuned flags.</td></tr>
+        <tr><td>Removal of the 32-bit x86 port</td><td>The JDK build matrix drops legacy 32-bit x86 — a housekeeping change, not something app code needs to react to.</td></tr>
+      </tbody>
+    </table>
+    <button class="mark-complete" data-section="java25-7">☐ Mark this topic complete</button>
+  </section>
+
+  <section class="topic reveal-up" id="quiz">
+    <h2>Quick Check</h2>
+    <div class="quiz-box" id="java25Quiz"></div>
+  </section>
+
+  <div class="hero-cta" style="margin:40px 0;">
+    <a href="advanced.html" class="btn btn-primary">Next: Advanced Topics →</a>
+  </div>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+const QUIZ_DATA = [
+  { q: "What does a Java 25 'compact source file' let you skip for a simple program?", options: ["The .java file extension", "The enclosing class, `static`, and the String[] args parameter", "The need to compile at all", "Type checking"], correct: 1,
+    explain: "void main() { ... } compiles fine — the compiler supplies an implicit class behind the scenes." },
+  { q: "What must still come before a `super(...)` call in a flexible constructor body?", options: ["Nothing may come before it, ever", "Only comments", "Statements that don't reference the instance being constructed (`this`)", "Only static field reads"], correct: 2,
+    explain: "You can validate arguments or compute values first, but you can't touch `this` before the superclass is constructed." },
+  { q: "Scoped values are best described as...", options: ["A faster HashMap", "An immutable, automatically-scoped alternative to ThreadLocal", "A new collection type", "A replacement for records"], correct: 1,
+    explain: "A scoped value is bound for one call (including to child virtual threads it spawns) and unbinds automatically when that call returns." },
+  { q: "In Java 25, `case int c when c < 0 ->` inside a switch is an example of...", options: ["A syntax error", "Pattern matching extended to primitive types (preview)", "An array pattern", "A record pattern"], correct: 1,
+    explain: "Primitive type patterns let switch/instanceof match directly against primitives, guarded by a `when` clause." },
+  { q: "What is Generational Shenandoah?", options: ["A new programming language feature", "Applying generational collection to the low-pause-time Shenandoah GC", "A build tool", "A deprecated API"], correct: 1,
+    explain: "It combines Shenandoah's very low pause times with the throughput benefits of generational collection." },
+];
+</script>
+<script src="js/quiz.js"></script>
+<script src="js/main.js"></script>
+<script>document.addEventListener("DOMContentLoaded", () => buildQuiz("java25Quiz", QUIZ_DATA));</script>
+</body>
+</html>
