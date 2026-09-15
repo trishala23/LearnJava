@@ -10,7 +10,7 @@ Pages**.
 | Page | Covers |
 |------|--------|
 | `index.html` | Landing page, learning path, release timeline |
-| `basics.html` | JVM/JRE/JDK, variables, control flow, OOP, exceptions, arrays/strings, core collections |
+| `basics.html` | JVM/JRE/JDK, variables, control flow, arrays, strings (pool, immutability, methods, StringBuilder), enums, OOP, exceptions, core collections |
 | `java8.html` | Lambdas, functional interfaces, Streams, method references, default/static interface methods, `Optional`, `java.time` |
 | `java11.html` | `var`, new `String`/`Files` methods, `HttpClient`, single-file source launching |
 | `java21.html` | Records, sealed classes, pattern matching, record patterns, virtual threads, sequenced collections, text blocks, structured concurrency |
