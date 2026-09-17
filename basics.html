@@ -339,8 +339,115 @@ schedule.put(Day.MON, "Standup");
     <button class="mark-complete" data-section="basics-6">☐ Mark this topic complete</button>
   </section>
 
+  <section class="topic reveal-up" id="classes-objects">
+    <h2>7. Classes &amp; Objects</h2>
+    <p class="section-lead">A <strong>class</strong> is a blueprint — it defines what fields and behavior instances will have. An <strong>object</strong> is one instance of that blueprint, created at runtime with <code>new</code> and living on the heap.</p>
+
+    <div class="diagram">
+      <div class="diagram-box"><strong>class Dog</strong>blueprint<br><small>compiled once</small></div>
+      <div class="diagram-arrow">new →</div>
+      <div class="diagram-box"><strong>d1</strong>object #1<br><small>heap</small></div>
+      <div class="diagram-arrow">new →</div>
+      <div class="diagram-box"><strong>d2</strong>object #2<br><small>heap</small></div>
+    </div>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Defining &amp; instantiating</button>
+        <button class="code-tab-btn">Constructors &amp; this</button>
+        <button class="code-tab-btn">Instance vs static</button>
+        <button class="code-tab-btn">Object's own methods</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>class Dog {
+    String name;     // instance field — each object gets its own copy
+    int age;
+
+    void bark() {
+        System.out.println(name + " says Woof!");
+    }
+}
+
+Dog d1 = new Dog();      // 1. allocate memory on the heap
+d1.name = "Rex";           // 2. d1 is a reference variable pointing at it
+d1.age = 3;
+
+Dog d2 = new Dog();       // a completely separate object
+d2.name = "Fido";
+
+d1.bark();                  // "Rex says Woof!"
+d2.bark();                  // "Fido says Woof!" — same class, independent state
+<button class="run-btn" data-target="out-object">▶ Run</button></code></pre>
+        <div class="console-output" id="out-object" data-output="Rex says Woof!
+Fido says Woof!" style="display:none;"></div>
+      </div>
+      <div class="code-tab-panel"><pre><code>class Dog {
+    String name;
+    int age;
+
+    Dog() {                      // no-arg constructor
+        this("Unnamed", 0);        // this(...) delegates to another constructor
+    }
+
+    Dog(String name, int age) {   // parameterized constructor
+        this.name = name;          // `this.name` = field, `name` = parameter
+        this.age = age;
+    }
+}
+
+Dog d1 = new Dog();               // uses the no-arg constructor -> "Unnamed", 0
+Dog d2 = new Dog("Rex", 3);        // uses the parameterized one
+
+// If you don't write ANY constructor, Java silently supplies a no-arg
+// default constructor. The moment you write one yourself, that free
+// default constructor disappears — you'd need to add one back explicitly.</code></pre></div>
+      <div class="code-tab-panel"><pre><code>class Counter {
+    static int totalCreated = 0;   // ONE copy, shared by every instance
+    int id;                          // a separate copy per instance
+
+    Counter() {
+        totalCreated++;               // shared static field
+        id = totalCreated;
+    }
+
+    static void printTotal() {         // static methods can't use `this`
+        System.out.println("Created: " + totalCreated);
+    }
+}
+
+new Counter(); new Counter(); new Counter();
+Counter.printTotal();     // "Created: 3" — call static members on the class itself
+<button class="run-btn" data-target="out-static">▶ Run</button></code></pre>
+        <div class="console-output" id="out-static" data-output="Created: 3" style="display:none;"></div>
+      </div>
+      <div class="code-tab-panel"><pre><code>class Point {
+    int x, y;
+    Point(int x, int y) { this.x = x; this.y = y; }
+
+    @Override
+    public String toString() { return "(" + x + ", " + y + ")"; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Point p)) return false;   // Java 16+ pattern instanceof
+        return x == p.x && y == p.y;
+    }
+
+    @Override
+    public int hashCode() { return Objects.hash(x, y); }
+}
+
+// Every class implicitly extends Object, which is where toString(),
+// equals(), and hashCode() come from — the defaults print/compare by
+// identity (memory address), which is rarely what you actually want.</code></pre></div>
+    </div>
+
+    <div class="note tip"><strong>Where objects live:</strong> the object itself is allocated on the heap; a reference variable like <code>d1</code> lives on the stack (or as a field on another object) and just points at it. Assigning <code>d2 = d1</code> copies the reference, not the object — both variables then point at the same Dog.</div>
+    <div class="note warn"><strong>Garbage collection:</strong> once no reference anywhere in the program points to an object, it becomes eligible for collection — you never <code>free()</code> it manually. See <a href="advanced.html#gc">Advanced Topics</a> for how the collector actually finds and reclaims it.</div>
+    <button class="mark-complete" data-section="basics-7">☐ Mark this topic complete</button>
+  </section>
+
   <section class="topic reveal-up" id="oop">
-    <h2>7. Object-Oriented Programming</h2>
+    <h2>8. Object-Oriented Programming</h2>
     <p class="section-lead">The four pillars: <strong>encapsulation</strong>, <strong>inheritance</strong>, <strong>polymorphism</strong>, <strong>abstraction</strong>.</p>
 
     <div class="code-tabs">
@@ -397,11 +504,11 @@ class Circle extends Shape implements Drawable {
     </div>
 
     <div class="note"><strong>abstract class vs interface:</strong> a class can extend only one abstract class but implement many interfaces; abstract classes may hold instance state, interfaces (pre-Java 9) may not.</div>
-    <button class="mark-complete" data-section="basics-7">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="basics-8">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="exceptions">
-    <h2>8. Exception Handling</h2>
+    <h2>9. Exception Handling</h2>
     <p class="section-lead">Exceptions separate error-handling from normal logic. <code>Throwable</code> splits into <code>Error</code> (JVM-level, don't catch) and <code>Exception</code>.</p>
 
     <div class="diagram">
@@ -432,11 +539,11 @@ Always runs" style="display:none;"></div>
 } catch (IOException e) {
     e.printStackTrace();
 } // r.close() called automatically</code></pre>
-    <button class="mark-complete" data-section="basics-8">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="basics-9">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="collections-basics">
-    <h2>9. Core Collections</h2>
+    <h2>10. Core Collections</h2>
     <p class="section-lead">The three shapes you'll reach for constantly: ordered lists, unique sets, and key→value maps. (Deep internals live in <a href="advanced.html#collections">Advanced Topics</a>.)</p>
 
     <table>
@@ -456,13 +563,13 @@ Set&lt;Integer&gt; unique = new HashSet&lt;&gt;(List.of(1, 2, 2, 3)); // {1, 2, 
 Map&lt;String, Integer&gt; ages = new HashMap&lt;&gt;();
 ages.put("Ada", 36);
 System.out.println(ages.get("Ada")); // 36</code></pre>
-    <button class="mark-complete" data-section="basics-9">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="basics-10">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="quiz">
-    <h2>10. Quick Check</h2>
+    <h2>11. Quick Check</h2>
     <div class="quiz-box" id="basicsQuiz"></div>
-    <button class="mark-complete" data-section="basics-10">☐ Mark quiz complete</button>
+    <button class="mark-complete" data-section="basics-11">☐ Mark quiz complete</button>
   </section>
 
   <div class="hero-cta" style="margin:40px 0;">
@@ -485,6 +592,12 @@ const QUIZ_DATA = [
     explain: "+ concatenation allocates a new String each iteration; StringBuilder mutates one internal buffer." },
   { q: "What does `Day.values()` return for an enum named Day?", options: ["A single Day constant", "An array of every constant, in declared order", "The enum's ordinal numbers only", "A List<Day>"], correct: 1,
     explain: "values() returns a Day[] containing every constant in the order they were declared." },
+  { q: "What happens once you write your own constructor for a class?", options: ["Nothing changes", "Java's free no-arg default constructor disappears", "The class can no longer be instantiated", "All fields become static"], correct: 1,
+    explain: "Java only supplies a no-arg default constructor when you write none yourself." },
+  { q: "In `this.name = name;` inside a constructor, what does `this.name` refer to?", options: ["The constructor's parameter", "The object's field, disambiguated from the parameter of the same name", "A static variable", "Nothing — it's a syntax error"], correct: 1,
+    explain: "`this` refers to the current object, letting `this.name` (the field) be distinguished from `name` (the parameter)." },
+  { q: "A `static` field on a class is best described as...", options: ["A separate copy for every instance", "One copy shared by all instances of the class", "A field that can never change", "Only usable inside constructors"], correct: 1,
+    explain: "static fields belong to the class itself, not to any one instance — every object sees the same value." },
   { q: "Accessing an array index equal to its `.length` throws...", options: ["NullPointerException", "ArrayIndexOutOfBoundsException", "ClassCastException", "Nothing — it returns null"], correct: 1,
     explain: "Valid indices run from 0 to length - 1; length itself is one past the end." },
   { q: "Which keyword lets a class provide its own version of an inherited method?", options: ["extends", "implements", "@Override", "super"], correct: 2,
