@@ -507,8 +507,88 @@ class Circle extends Shape implements Drawable {
     <button class="mark-complete" data-section="basics-8">☐ Mark this topic complete</button>
   </section>
 
+  <section class="topic reveal-up" id="interfaces">
+    <h2>9. Interfaces</h2>
+    <p class="section-lead">An interface defines a <strong>contract</strong> — a set of methods a class promises to implement — without saying anything about how. It's Java's main tool for programming "to a type, not an implementation."</p>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Basic interface</button>
+        <button class="code-tab-btn">Default &amp; static methods</button>
+        <button class="code-tab-btn">Constants &amp; multiple interfaces</button>
+        <button class="code-tab-btn">Interface vs abstract class</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>interface Payable {
+    double calculatePay();   // implicitly public + abstract — no body allowed here
+}
+
+class Employee implements Payable {
+    double hours, rate;
+    Employee(double hours, double rate) { this.hours = hours; this.rate = rate; }
+
+    @Override
+    public double calculatePay() {   // must be public — can't reduce visibility
+        return hours * rate;
+    }
+}
+
+Payable p = new Employee(40, 25);     // program against the interface type
+System.out.println(p.calculatePay()); // 1000.0
+<button class="run-btn" data-target="out-interface">▶ Run</button></code></pre>
+        <div class="console-output" id="out-interface" data-output="1000.0" style="display:none;"></div>
+      </div>
+      <div class="code-tab-panel"><pre><code>interface Vehicle {
+    void drive();                          // abstract — every implementor must define this
+
+    default void honk() {                   // Java 8+: has a body, implementors get it free
+        System.out.println("Beep!");
+    }
+
+    static Vehicle basic() {                 // called on the interface itself: Vehicle.basic()
+        return () -> System.out.println("Driving a basic vehicle");
+    }
+
+    private void log(String msg) {            // Java 9+: private helper method,
+        System.out.println("[LOG] " + msg);    // only callable from other methods in this interface
+    }
+}
+
+class Car implements Vehicle {
+    public void drive() { System.out.println("Vroom!"); }
+    // honk() is inherited for free — no need to implement it
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>interface Limits {
+    int MAX_USERS = 100;   // implicitly public static final — a compile-time constant
+}
+
+interface Flyable { void fly(); }
+interface Swimmable { void swim(); }
+
+class Duck implements Flyable, Swimmable {   // a class can implement many interfaces
+    public void fly() { System.out.println("Flap flap"); }
+    public void swim() { System.out.println("Paddle paddle"); }
+}
+
+System.out.println(Limits.MAX_USERS); // 100 — referenced via the interface name</code></pre></div>
+      <div class="code-tab-panel"><table>
+        <thead><tr><th></th><th>interface</th><th>abstract class</th></tr></thead>
+        <tbody>
+          <tr><td>A class can have</td><td>many implemented</td><td>only one extended</td></tr>
+          <tr><td>Instance fields</td><td>no (only constants)</td><td>yes</td></tr>
+          <tr><td>Constructors</td><td>no</td><td>yes</td></tr>
+          <tr><td>Method bodies</td><td>default / static / private only</td><td>any method may have one</td></tr>
+          <tr><td>Best for</td><td>a capability shared by unrelated classes</td><td>shared state/logic among closely related classes</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="note tip"><strong>Functional interfaces:</strong> an interface with exactly one abstract method (default/static/private methods don't count) can be implemented with a lambda expression instead of a class — the <code>() -> ...</code> in the <code>Vehicle.basic()</code> example above is a <code>Vehicle</code> in disguise. See <a href="java8.html#lambdas">Java 8 Features</a> for the full picture, including <code>@FunctionalInterface</code> and the built-in <code>Predicate</code>/<code>Function</code>/<code>Supplier</code> family.</div>
+    <div class="note warn"><strong>The diamond problem:</strong> if a class implements two interfaces that both provide a conflicting <code>default</code> method, Java refuses to guess — the class <em>must</em> override that method itself. See the <a href="interview.html">interview bank</a> for a worked example.</div>
+    <button class="mark-complete" data-section="basics-9">☐ Mark this topic complete</button>
+  </section>
+
   <section class="topic reveal-up" id="exceptions">
-    <h2>9. Exception Handling</h2>
+    <h2>10. Exception Handling</h2>
     <p class="section-lead">Exceptions separate error-handling from normal logic. <code>Throwable</code> splits into <code>Error</code> (JVM-level, don't catch) and <code>Exception</code>.</p>
 
     <div class="diagram">
@@ -539,11 +619,11 @@ Always runs" style="display:none;"></div>
 } catch (IOException e) {
     e.printStackTrace();
 } // r.close() called automatically</code></pre>
-    <button class="mark-complete" data-section="basics-9">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="basics-10">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="collections-basics">
-    <h2>10. Core Collections</h2>
+    <h2>11. Core Collections</h2>
     <p class="section-lead">The three shapes you'll reach for constantly: ordered lists, unique sets, and key→value maps. (Deep internals live in <a href="advanced.html#collections">Advanced Topics</a>.)</p>
 
     <table>
@@ -563,13 +643,13 @@ Set&lt;Integer&gt; unique = new HashSet&lt;&gt;(List.of(1, 2, 2, 3)); // {1, 2, 
 Map&lt;String, Integer&gt; ages = new HashMap&lt;&gt;();
 ages.put("Ada", 36);
 System.out.println(ages.get("Ada")); // 36</code></pre>
-    <button class="mark-complete" data-section="basics-10">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="basics-11">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="quiz">
-    <h2>11. Quick Check</h2>
+    <h2>12. Quick Check</h2>
     <div class="quiz-box" id="basicsQuiz"></div>
-    <button class="mark-complete" data-section="basics-11">☐ Mark quiz complete</button>
+    <button class="mark-complete" data-section="basics-12">☐ Mark quiz complete</button>
   </section>
 
   <div class="hero-cta" style="margin:40px 0;">
@@ -598,6 +678,12 @@ const QUIZ_DATA = [
     explain: "`this` refers to the current object, letting `this.name` (the field) be distinguished from `name` (the parameter)." },
   { q: "A `static` field on a class is best described as...", options: ["A separate copy for every instance", "One copy shared by all instances of the class", "A field that can never change", "Only usable inside constructors"], correct: 1,
     explain: "static fields belong to the class itself, not to any one instance — every object sees the same value." },
+  { q: "How many interfaces can a single Java class implement?", options: ["None", "Exactly one", "As many as it declares with `implements`", "Only two"], correct: 2,
+    explain: "Unlike class inheritance (single superclass only), a class can implement any number of interfaces." },
+  { q: "A field declared inside an interface (e.g. `int MAX = 100;`) is implicitly...", options: ["private and mutable", "public, static, and final", "protected only", "Not allowed at all"], correct: 1,
+    explain: "Interface fields are always public static final — effectively compile-time constants." },
+  { q: "What must a class do if it implements two interfaces with conflicting default methods of the same signature?", options: ["Nothing — Java picks one automatically", "It must override that method itself", "The code fails to compile no matter what", "Only the first interface's default is used"], correct: 1,
+    explain: "This is the interface 'diamond problem' — Java refuses to guess, so the implementing class must resolve the conflict explicitly." },
   { q: "Accessing an array index equal to its `.length` throws...", options: ["NullPointerException", "ArrayIndexOutOfBoundsException", "ClassCastException", "Nothing — it returns null"], correct: 1,
     explain: "Valid indices run from 0 to length - 1; length itself is one past the end." },
   { q: "Which keyword lets a class provide its own version of an inherited method?", options: ["extends", "implements", "@Override", "super"], correct: 2,
