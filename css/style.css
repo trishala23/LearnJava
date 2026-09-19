@@ -310,6 +310,77 @@ p code, li code { background: var(--surface-2); padding: 2px 6px; border-radius:
   min-height: 24px;
 }
 
+/* ---------- Live Java playground (real compile via a public runner) ---------- */
+.playground {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 18px 0;
+  box-shadow: var(--shadow);
+}
+.playground-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--surface-2);
+  padding: 8px 14px;
+}
+.playground-toolbar .label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.playground-actions { display: flex; gap: 8px; }
+.playground-run-btn, .playground-reset-btn {
+  border: none;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.playground-run-btn { background: var(--accent); color: white; }
+.playground-run-btn:disabled { opacity: 0.6; cursor: wait; }
+.playground-reset-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.playground textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  resize: vertical;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  padding: 18px 20px;
+  min-height: 180px;
+  tab-size: 4;
+}
+.playground textarea:focus { outline: 2px solid var(--brand-2); outline-offset: -2px; }
+.playground-output {
+  background: #0d0d14;
+  color: #7CFC9C;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 14px 18px;
+  border-top: 1px dashed #333;
+  white-space: pre-wrap;
+  min-height: 24px;
+  display: none;
+}
+.playground-output.has-error { color: #ff8f8f; }
+.playground-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 8px 14px 12px;
+  background: var(--surface-2);
+}
+
 /* ---------- Accordion (interview Q&A) ---------- */
 .accordion-item {
   border: 1px solid var(--border);

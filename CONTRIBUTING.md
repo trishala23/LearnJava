@@ -52,8 +52,43 @@ Suggested prefixes:
    on every page.
 3. Add a card linking to it from `index.html`.
 4. Reuse existing CSS classes (`.card`, `.code-tabs`, `.accordion-item`,
-   `.quiz-box`, `.diagram`, `.timeline`, `.note`) before inventing new
-   ones — consistency matters more than novelty here.
+   `.quiz-box`, `.diagram`, `.timeline`, `.note`, `.playground`) before
+   inventing new ones — consistency matters more than novelty here.
+
+## Adding a live, editable Java playground
+
+Most code demos on the site use a static `.run-btn`/`.console-output`
+pair (see `js/main.js`'s `initRunButtons`) that just plays back
+pre-baked, hard-coded output — fine for "watch this run." For an
+exercise a reader should actually be able to edit and run for real,
+use the `.playground` component instead (see `java8.html`'s "Try it
+yourself" section for a full example):
+
+```html
+<div class="playground">
+  <div class="playground-toolbar">
+    <span class="label">Main.java</span>
+    <div class="playground-actions">
+      <button class="playground-reset-btn">↺ Reset</button>
+      <button class="playground-run-btn">▶ Compile &amp; Run</button>
+    </div>
+  </div>
+  <textarea spellcheck="false" rows="14">public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello!");
+    }
+}</textarea>
+  <div class="playground-output"></div>
+</div>
+```
+
+Include `<script src="js/playground.js"></script>` on the page (see
+`java8.html`). It sends the textarea's contents to
+[Piston](https://github.com/engineer-man/piston), a free public
+code-execution API, and shows the real `javac`/`java` output — no
+project backend involved. Requirements: the public class in the code
+must be named exactly `Main` (Piston compiles it as `Main.java`), and
+the feature needs the reader to be online.
 
 ## Adding quiz questions or interview Q&A
 

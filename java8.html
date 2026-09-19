@@ -75,15 +75,23 @@ System.out.println(addBase.apply(5));                    // 15
     <div class="note warn"><strong>Why the restriction?</strong> a lambda might outlive the method it was created in (e.g. handed off to another thread or stored for later). Java captures local variables <em>by value</em> at creation time — if <code>base</code> could change afterward, the lambda's copy would silently go stale, so the compiler refuses to let it change at all.</div>
 
     <h3>Try it yourself: problem statements</h3>
-    <p class="section-lead">Three small problems, each solved with a lambda — read the problem, then hit compile &amp; run to see the (simulated) output.</p>
+    <p class="section-lead">Three small problems, each solved with a lambda. These boxes are <strong>real, editable Java</strong> — edit the code and hit "Compile &amp; Run" to send it to a free public Java compiler and see the actual output (requires internet access; "↺ Reset" restores the starting code).</p>
 
     <div class="note"><strong>Problem 1 — Custom functional interface.</strong> Declare a <code>Greeter</code> functional interface with one method, <code>greet(String name)</code>. Implement it two different ways with lambdas — a formal greeting and a casual one — and call both.</div>
-    <pre><code>@FunctionalInterface
+    <div class="playground">
+      <div class="playground-toolbar">
+        <span class="label">Main.java</span>
+        <div class="playground-actions">
+          <button class="playground-reset-btn">↺ Reset</button>
+          <button class="playground-run-btn">▶ Compile &amp; Run</button>
+        </div>
+      </div>
+      <textarea spellcheck="false" rows="14">@FunctionalInterface
 interface Greeter {
     void greet(String name);
 }
 
-public class GreeterDemo {
+public class Main {
     public static void main(String[] args) {
         Greeter formal   = name -> System.out.println("Good day, " + name + ".");
         Greeter friendly = name -> System.out.println("Hey " + name + "!");
@@ -91,15 +99,24 @@ public class GreeterDemo {
         formal.greet("Ms. Lovelace");
         friendly.greet("Grace");
     }
-}
-<button class="run-btn" data-target="out-greeter">▶ Compile &amp; Run</button></code></pre>
-    <div class="console-output" id="out-greeter" data-output="Good day, Ms. Lovelace.
-Hey Grace!" style="display:none;"></div>
+}</textarea>
+      <div class="playground-output"></div>
+    </div>
 
-    <div class="note"><strong>Problem 2 — Sort a list with a lambda Comparator.</strong> Given a list of <code>Employee</code> records, sort them by salary from highest to lowest and print the result — without writing a separate <code>Comparator</code> class.</div>
-    <pre><code>record Employee(String name, double salary) { }
+    <div class="note"><strong>Problem 2 — Sort a list with a lambda Comparator.</strong> Given a list of <code>Employee</code> records, sort them by salary from highest to lowest and print the result — without writing a separate <code>Comparator</code> class. Try changing <code>e2, e1</code> to <code>e1, e2</code> and re-running to see the order flip.</div>
+    <div class="playground">
+      <div class="playground-toolbar">
+        <span class="label">Main.java</span>
+        <div class="playground-actions">
+          <button class="playground-reset-btn">↺ Reset</button>
+          <button class="playground-run-btn">▶ Compile &amp; Run</button>
+        </div>
+      </div>
+      <textarea spellcheck="false" rows="18">import java.util.*;
 
-public class SortDemo {
+record Employee(String name, double salary) { }
+
+public class Main {
     public static void main(String[] args) {
         List&lt;Employee&gt; employees = new ArrayList&lt;&gt;(List.of(
             new Employee("Ada", 95_000),
@@ -111,15 +128,21 @@ public class SortDemo {
 
         employees.forEach(e -> System.out.println(e.name() + ": $" + e.salary()));
     }
-}
-<button class="run-btn" data-target="out-sort">▶ Compile &amp; Run</button></code></pre>
-    <div class="console-output" id="out-sort" data-output="Grace: $120000.0
-Linus: $110000.0
-Ada: $95000.0" style="display:none;"></div>
+}</textarea>
+      <div class="playground-output"></div>
+    </div>
     <div class="note tip">The lambda passed to <code>.sort()</code> is a <code>Comparator&lt;Employee&gt;</code> — its two parameters and <code>int</code> return type are inferred entirely from that target type, which is why no types need to be written.</div>
 
     <div class="note warn"><strong>Problem 3 — Predict the compiler error.</strong> The snippet below looks reasonable but fails to compile. Can you spot why before running it?</div>
-    <pre><code>public class CaptureBug {
+    <div class="playground">
+      <div class="playground-toolbar">
+        <span class="label">Main.java</span>
+        <div class="playground-actions">
+          <button class="playground-reset-btn">↺ Reset</button>
+          <button class="playground-run-btn">▶ Compile &amp; Run</button>
+        </div>
+      </div>
+      <textarea spellcheck="false" rows="14">public class Main {
     public static void main(String[] args) {
         int count = 0;
 
@@ -130,13 +153,38 @@ Ada: $95000.0" style="display:none;"></div>
 
         increment.run();
     }
-}
-<button class="run-btn" data-target="out-capturebug">▶ Compile &amp; Run</button></code></pre>
-    <div class="console-output" id="out-capturebug" data-output="error: local variables referenced from a lambda expression must be final or effectively final
-    count++;
-    ^
-1 error" style="display:none;"></div>
-    <div class="note tip"><strong>Fix:</strong> a lambda can't mutate a captured local variable at all — even once. If you need a running total, use an <code>AtomicInteger</code> (mutate its contents, not the reference) or restructure the code so the counting happens outside the lambda.</div>
+}</textarea>
+      <div class="playground-output"></div>
+    </div>
+    <div class="note tip"><strong>Fix:</strong> a lambda can't mutate a captured local variable at all — even once. If you need a running total, use an <code>AtomicInteger</code> (mutate its contents, not the reference) or restructure the code so the counting happens outside the lambda. Try that fix in the box above and re-run it.</div>
+
+    <h3>Write your own</h3>
+    <p class="section-lead">A blank slate — write any lambda-based Java you like and run it for real.</p>
+    <div class="playground">
+      <div class="playground-toolbar">
+        <span class="label">Main.java</span>
+        <div class="playground-actions">
+          <button class="playground-reset-btn">↺ Reset</button>
+          <button class="playground-run-btn">▶ Compile &amp; Run</button>
+        </div>
+      </div>
+      <textarea spellcheck="false" rows="16">import java.util.function.Predicate;
+
+public class Main {
+    public static void main(String[] args) {
+        // Write your own lambda here, then hit Run.
+        Predicate&lt;Integer&gt; isEven = n -> n % 2 == 0;
+
+        for (int i = 1; i <= 10; i++) {
+            if (isEven.test(i)) {
+                System.out.println(i + " is even");
+            }
+        }
+    }
+}</textarea>
+      <div class="playground-output"></div>
+    </div>
+    <div class="note">Powered by <a href="https://github.com/engineer-man/piston" target="_blank" rel="noopener">Piston</a>, a free public code-execution API — no sign-up, no server of our own. Being free and shared, it can occasionally be slow or briefly unavailable; just try again if a run fails.</div>
 
     <button class="mark-complete" data-section="java8-1">☐ Mark this topic complete</button>
   </section>
@@ -295,6 +343,7 @@ const QUIZ_DATA = [
 ];
 </script>
 <script src="js/quiz.js"></script>
+<script src="js/playground.js"></script>
 <script src="js/main.js"></script>
 <script>document.addEventListener("DOMContentLoaded", () => buildQuiz("java8Quiz", QUIZ_DATA));</script>
 </body>
