@@ -11,7 +11,7 @@ Pages**.
 |------|--------|
 | `index.html` | Landing page, learning path, release timeline |
 | `basics.html` | JVM/JRE/JDK, variables, control flow, arrays, strings (pool, immutability, methods, StringBuilder), enums, classes & objects (constructors, `this`, instance vs static, `equals`/`hashCode`/`toString`), OOP pillars, interfaces (default/static/private methods, constants, diamond problem), exceptions, core collections |
-| `java8.html` | Lambdas, functional interfaces, Streams, method references, default/static interface methods, `Optional`, `java.time` |
+| `java8.html` | Lambdas (syntax forms, variable capture, worked problem statements with simulated compile/run), functional interfaces, Streams, method references, default/static interface methods, `Optional`, `java.time` |
 | `java11.html` | `var`, new `String`/`Files` methods, `HttpClient`, single-file source launching |
 | `java21.html` | Records, sealed classes, pattern matching, record patterns, virtual threads, sequenced collections, text blocks, structured concurrency |
 | `java25.html` | Compact source files & instance main methods, module imports, flexible constructor bodies, scoped values, structured concurrency (preview), primitive type patterns, GC/runtime improvements |

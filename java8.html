@@ -23,7 +23,7 @@
 
   <section class="topic reveal-up" id="lambdas">
     <h2>1. Lambda Expressions</h2>
-    <p class="section-lead">A lambda is a compact way to write an instance of a <strong>functional interface</strong> (one abstract method) — code as a value.</p>
+    <p class="section-lead">A lambda is a compact way to write an instance of a <strong>functional interface</strong> (one abstract method) — code as a value. Instead of naming a class and overriding a method, you write the method body inline, right where it's needed.</p>
 
     <div class="code-tabs">
       <div class="code-tab-bar">
@@ -39,12 +39,105 @@
       <div class="code-tab-panel"><pre><code>Comparator&lt;String&gt; byLength = (a, b) -> a.length() - b.length();
 
 Runnable task = () -> System.out.println("Running!");
+task.run();
+
 BinaryOperator&lt;Integer&gt; sum = (x, y) -> x + y;
+System.out.println("sum(2, 3) = " + sum.apply(2, 3));
 <button class="run-btn" data-target="out-lambda">▶ Run</button></code></pre>
         <div class="console-output" id="out-lambda" data-output="Running!
 sum(2, 3) = 5" style="display:none;"></div>
       </div>
     </div>
+
+    <h3>Lambda syntax, at a glance</h3>
+    <p>Every lambda has the same shape — <code>(parameters) -> body</code> — but Java lets you drop punctuation the compiler can infer:</p>
+    <table>
+      <thead><tr><th>Form</th><th>Example</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Zero parameters</td><td><code>() -> System.out.println("hi")</code></td><td>Parentheses are required even with no parameters.</td></tr>
+        <tr><td>One parameter</td><td><code>x -> x * x</code></td><td>Parentheses are optional for exactly one inferred-type parameter.</td></tr>
+        <tr><td>Multiple parameters</td><td><code>(x, y) -> x + y</code></td><td>Parentheses are required for two or more parameters.</td></tr>
+        <tr><td>Block body</td><td><code>(x, y) -> { int s = x + y; return s; }</code></td><td>Braces + explicit <code>return</code> once you need more than one statement.</td></tr>
+        <tr><td>Explicit parameter types</td><td><code>(int x, int y) -> x + y</code></td><td>Rarely needed — the compiler infers types from the target functional interface.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Variable capture: "effectively final"</h3>
+    <p>A lambda can read local variables from its enclosing scope, but only if they're never reassigned after being set — the compiler calls this <strong>effectively final</strong>. This isn't a style suggestion; it fails to compile otherwise.</p>
+    <pre><code>int base = 10;
+Function&lt;Integer, Integer&gt; addBase = n -> n + base;   // OK — base is effectively final
+System.out.println(addBase.apply(5));                    // 15
+
+// base = 20;   // uncomment this and addBase stops compiling:
+// "local variables referenced from a lambda expression must be final or effectively final"
+<button class="run-btn" data-target="out-capture">▶ Compile &amp; Run</button></code></pre>
+    <div class="console-output" id="out-capture" data-output="15" style="display:none;"></div>
+    <div class="note warn"><strong>Why the restriction?</strong> a lambda might outlive the method it was created in (e.g. handed off to another thread or stored for later). Java captures local variables <em>by value</em> at creation time — if <code>base</code> could change afterward, the lambda's copy would silently go stale, so the compiler refuses to let it change at all.</div>
+
+    <h3>Try it yourself: problem statements</h3>
+    <p class="section-lead">Three small problems, each solved with a lambda — read the problem, then hit compile &amp; run to see the (simulated) output.</p>
+
+    <div class="note"><strong>Problem 1 — Custom functional interface.</strong> Declare a <code>Greeter</code> functional interface with one method, <code>greet(String name)</code>. Implement it two different ways with lambdas — a formal greeting and a casual one — and call both.</div>
+    <pre><code>@FunctionalInterface
+interface Greeter {
+    void greet(String name);
+}
+
+public class GreeterDemo {
+    public static void main(String[] args) {
+        Greeter formal   = name -> System.out.println("Good day, " + name + ".");
+        Greeter friendly = name -> System.out.println("Hey " + name + "!");
+
+        formal.greet("Ms. Lovelace");
+        friendly.greet("Grace");
+    }
+}
+<button class="run-btn" data-target="out-greeter">▶ Compile &amp; Run</button></code></pre>
+    <div class="console-output" id="out-greeter" data-output="Good day, Ms. Lovelace.
+Hey Grace!" style="display:none;"></div>
+
+    <div class="note"><strong>Problem 2 — Sort a list with a lambda Comparator.</strong> Given a list of <code>Employee</code> records, sort them by salary from highest to lowest and print the result — without writing a separate <code>Comparator</code> class.</div>
+    <pre><code>record Employee(String name, double salary) { }
+
+public class SortDemo {
+    public static void main(String[] args) {
+        List&lt;Employee&gt; employees = new ArrayList&lt;&gt;(List.of(
+            new Employee("Ada", 95_000),
+            new Employee("Grace", 120_000),
+            new Employee("Linus", 110_000)
+        ));
+
+        employees.sort((e1, e2) -> Double.compare(e2.salary(), e1.salary())); // descending
+
+        employees.forEach(e -> System.out.println(e.name() + ": $" + e.salary()));
+    }
+}
+<button class="run-btn" data-target="out-sort">▶ Compile &amp; Run</button></code></pre>
+    <div class="console-output" id="out-sort" data-output="Grace: $120000.0
+Linus: $110000.0
+Ada: $95000.0" style="display:none;"></div>
+    <div class="note tip">The lambda passed to <code>.sort()</code> is a <code>Comparator&lt;Employee&gt;</code> — its two parameters and <code>int</code> return type are inferred entirely from that target type, which is why no types need to be written.</div>
+
+    <div class="note warn"><strong>Problem 3 — Predict the compiler error.</strong> The snippet below looks reasonable but fails to compile. Can you spot why before running it?</div>
+    <pre><code>public class CaptureBug {
+    public static void main(String[] args) {
+        int count = 0;
+
+        Runnable increment = () -> {
+            count++;                     // ✗ compile error
+            System.out.println(count);
+        };
+
+        increment.run();
+    }
+}
+<button class="run-btn" data-target="out-capturebug">▶ Compile &amp; Run</button></code></pre>
+    <div class="console-output" id="out-capturebug" data-output="error: local variables referenced from a lambda expression must be final or effectively final
+    count++;
+    ^
+1 error" style="display:none;"></div>
+    <div class="note tip"><strong>Fix:</strong> a lambda can't mutate a captured local variable at all — even once. If you need a running total, use an <code>AtomicInteger</code> (mutate its contents, not the reference) or restructure the code so the counting happens outside the lambda.</div>
+
     <button class="mark-complete" data-section="java8-1">☐ Mark this topic complete</button>
   </section>
 
