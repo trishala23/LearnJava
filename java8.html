@@ -315,6 +315,61 @@ System.out.println(today.format(fmt));</code></pre>
     <button class="mark-complete" data-section="java8-7">☐ Mark this topic complete</button>
   </section>
 
+  <section class="topic reveal-up" id="completablefuture">
+    <h2>8. CompletableFuture</h2>
+    <p class="section-lead">Java 8's answer to <code>Future</code>'s biggest weakness: a plain <code>Future</code> can only be polled or blocked on with <code>.get()</code> — it can't be chained, combined with another future, completed manually, or given a callback to run when it finishes. <code>CompletableFuture</code> (in <code>java.util.concurrent</code>) fixes all of that.</p>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">Creating &amp; chaining</button>
+        <button class="code-tab-btn">thenApply vs thenCompose</button>
+        <button class="code-tab-btn">Combining two futures</button>
+        <button class="code-tab-btn">Errors: get() vs join()</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture
+    .supplyAsync(() -> fetchUserName())        // runs asynchronously, returns a value
+    .thenApply(String::toUpperCase)              // transform the result when it arrives
+    .thenApply(name -> "Hello, " + name + "!")    // chain another transform
+    .exceptionally(ex -> "Hello, stranger!");      // recover if any step above threw
+
+System.out.println(future.join());   // blocks only here, once, to read the final result
+<button class="run-btn" data-target="out-cf">▶ Run</button></code></pre>
+        <div class="console-output" id="out-cf" data-output="Hello, ADA!" style="display:none;"></div>
+      </div>
+      <div class="code-tab-panel"><pre><code>CompletableFuture&lt;String&gt; userIdFuture = CompletableFuture.supplyAsync(() -> "u42");
+
+// thenApply: the mapper returns a plain value -> stays a flat CompletableFuture&lt;String&gt;
+CompletableFuture&lt;String&gt; upper = userIdFuture.thenApply(id -> id.toUpperCase());
+
+// thenCompose: the mapper itself returns a CompletableFuture -> "flattens" instead of
+// nesting one CompletableFuture inside another (the same idea as Optional's flatMap)
+CompletableFuture&lt;Profile&gt; profile = userIdFuture.thenCompose(id -> fetchProfileAsync(id));</code></pre></div>
+      <div class="code-tab-panel"><pre><code>CompletableFuture&lt;Double&gt; price = CompletableFuture.supplyAsync(() -> getPrice());
+CompletableFuture&lt;Double&gt; taxRate = CompletableFuture.supplyAsync(() -> getTaxRate());
+
+// runs once BOTH independent futures have completed
+CompletableFuture&lt;Double&gt; total = price.thenCombine(taxRate, (p, t) -> p * (1 + t));
+
+System.out.println(total.join());
+
+// waiting on many at once:
+CompletableFuture.allOf(price, taxRate).join();  // wait for every future to finish
+CompletableFuture.anyOf(price, taxRate).join();   // wait for whichever finishes first</code></pre></div>
+      <div class="code-tab-panel"><table>
+        <thead><tr><th>Method</th><th>Blocks the caller?</th><th>On failure, throws...</th></tr></thead>
+        <tbody>
+          <tr><td><code>get()</code></td><td>Yes</td><td>Checked <code>ExecutionException</code> / <code>InterruptedException</code></td></tr>
+          <tr><td><code>join()</code></td><td>Yes</td><td>Unchecked <code>CompletionException</code> (easier to use in lambdas — no checked exception to declare)</td></tr>
+          <tr><td><code>getNow(default)</code></td><td>No</td><td>Returns <code>default</code> immediately if not yet complete</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="note tip"><strong>vs. plain <code>Future</code>:</strong> a <code>Future</code> only offers <code>isDone()</code>, <code>cancel()</code>, and a blocking <code>get()</code> — there's no way to register a callback or chain work, so you either poll in a loop or block a thread waiting. <code>CompletableFuture</code> implements both <code>Future</code> and <code>CompletionStage</code>, adding the <code>then*</code>/<code>exceptionally</code>/<code>handle</code> callback methods shown above, plus <code>complete(value)</code> to finish one manually (handy for bridging callback-based APIs into futures).</div>
+    <div class="note warn">By default, <code>supplyAsync</code> and the <code>then*</code> callbacks run on the shared <code>ForkJoinPool.commonPool()</code> — for I/O-bound work, pass your own <code>Executor</code> as an extra argument (e.g. <code>thenApplyAsync(fn, myExecutor)</code>) so you don't starve that shared pool.</div>
+    <button class="mark-complete" data-section="java8-8">☐ Mark this topic complete</button>
+  </section>
+
   <section class="topic reveal-up" id="quiz">
     <h2>Quick Check</h2>
     <div class="quiz-box" id="java8Quiz"></div>
@@ -340,6 +395,12 @@ const QUIZ_DATA = [
     explain: "Optional makes 'this might not have a value' explicit in the type system instead of relying on null." },
   { q: "Which package holds the Java 8 date/time API?", options: ["java.util", "java.date", "java.time", "java.calendar"], correct: 2,
     explain: "java.time introduced LocalDate, LocalDateTime, Duration, Period, and friends." },
+  { q: "What could a plain `Future` NOT do, that `CompletableFuture` added in Java 8?", options: ["Be cancelled", "Chain callbacks / combine with another future without blocking", "Report isDone()", "Run on a thread pool"], correct: 1,
+    explain: "Future only offers a blocking get() and isDone()/cancel() — no chaining, combining, or callback registration." },
+  { q: "When should you use `thenCompose` instead of `thenApply` on a CompletableFuture?", options: ["Never, they're identical", "When the mapping function itself returns a CompletableFuture, to avoid nesting one future inside another", "Only for error handling", "When you need a synchronous result"], correct: 1,
+    explain: "thenCompose 'flattens' — like Optional.flatMap — when your mapper produces another CompletableFuture instead of a plain value." },
+  { q: "Compared to `.get()`, what does `CompletableFuture.join()` do differently on failure?", options: ["It throws a checked ExecutionException", "It throws an unchecked CompletionException, so it doesn't need to be declared in lambdas", "It silently returns null", "It retries automatically"], correct: 1,
+    explain: "join() wraps failures in an unchecked CompletionException, which is why it's the common choice inside lambda bodies where checked exceptions are awkward." },
 ];
 </script>
 <script src="js/quiz.js"></script>
