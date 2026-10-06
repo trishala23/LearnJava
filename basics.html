@@ -517,6 +517,7 @@ class Circle extends Shape implements Drawable {
         <button class="code-tab-btn">Default &amp; static methods</button>
         <button class="code-tab-btn">Constants &amp; multiple interfaces</button>
         <button class="code-tab-btn">Interface vs abstract class</button>
+        <button class="code-tab-btn">Combining both</button>
       </div>
       <div class="code-tab-panel active"><pre><code>interface Payable {
     double calculatePay();   // implicitly public + abstract — no body allowed here
@@ -573,17 +574,78 @@ System.out.println(Limits.MAX_USERS); // 100 — referenced via the interface na
       <div class="code-tab-panel"><table>
         <thead><tr><th></th><th>interface</th><th>abstract class</th></tr></thead>
         <tbody>
-          <tr><td>A class can have</td><td>many implemented</td><td>only one extended</td></tr>
-          <tr><td>Instance fields</td><td>no (only constants)</td><td>yes</td></tr>
-          <tr><td>Constructors</td><td>no</td><td>yes</td></tr>
-          <tr><td>Method bodies</td><td>default / static / private only</td><td>any method may have one</td></tr>
+          <tr><td>Inheritance</td><td>can implement many interfaces</td><td>can extend only one class</td></tr>
+          <tr><td>State</td><td>no instance fields (only <code>public static final</code> constants)</td><td>can have instance variables and constructors</td></tr>
+          <tr><td>Method bodies</td><td>abstract / default / static / private</td><td>abstract and concrete methods both</td></tr>
+          <tr><td>Performance</td><td>historically a touch slower (an extra interface-method-table lookup)</td><td>historically a touch faster (direct dispatch)</td></tr>
           <tr><td>Best for</td><td>a capability shared by unrelated classes</td><td>shared state/logic among closely related classes</td></tr>
         </tbody>
-      </table></div>
+      </table>
+      <div class="note" style="margin-top:14px;">The "performance" row is the classic textbook answer, and it was measurably true on older JVMs. On modern JIT-compiled JVMs the gap is usually too small to matter — profile before treating it as a real-world deciding factor. The structural differences above it are the ones that should actually drive your choice.</div></div>
+      <div class="code-tab-panel"><pre><code>// An abstract class for shared state/behavior among closely related types...
+abstract class Vehicle {
+    String brand;
+
+    Vehicle(String brand) {
+        this.brand = brand;
+    }
+
+    public void startEngine() {                 // concrete — shared by every subclass
+        System.out.println(brand + " engine started.");
+    }
+
+    abstract void drive();                        // abstract — each subclass defines its own
+}
+
+// ...and an interface for a capability that cuts across unrelated hierarchies.
+interface Electric {
+    void chargeBattery();
+}
+
+// A class can combine both: extend one abstract class AND implement interfaces.
+class Tesla extends Vehicle implements Electric {
+    Tesla(String brand) { super(brand); }
+
+    @Override
+    void drive() { System.out.println(brand + " is driving silently."); }
+
+    @Override
+    public void chargeBattery() { System.out.println(brand + " is charging."); }
+}</code></pre></div>
     </div>
 
+    <div class="note tip">
+      <strong>Rule of thumb:</strong> use an <strong>abstract class</strong> when subclasses share a strong "is-a" relationship plus real code/state to reuse (like <code>Vehicle</code>'s <code>brand</code> field and <code>startEngine()</code> above). Use an <strong>interface</strong> when otherwise-unrelated classes need to share one behavior or capability (like <code>Electric</code>, or the standard library's <code>Comparable</code>) — <code>Tesla</code> above needs both at once, and Java lets it.
+    </div>
     <div class="note tip"><strong>Functional interfaces:</strong> an interface with exactly one abstract method (default/static/private methods don't count) can be implemented with a lambda expression instead of a class — the <code>() -> ...</code> in the <code>Vehicle.basic()</code> example above is a <code>Vehicle</code> in disguise. See <a href="java8.html#lambdas">Java 8 Features</a> for the full picture, including <code>@FunctionalInterface</code> and the built-in <code>Predicate</code>/<code>Function</code>/<code>Supplier</code> family.</div>
     <div class="note warn"><strong>The diamond problem:</strong> if a class implements two interfaces that both provide a conflicting <code>default</code> method, Java refuses to guess — the class <em>must</em> override that method itself. See the <a href="interview.html">interview bank</a> for a worked example.</div>
+
+    <h3>How Java 8 default methods blur the line</h3>
+    <p>Before Java 8, the distinction was absolute: an interface could <em>only</em> declare a contract, never provide behavior. All real code had to live in a class — which is exactly why abstract classes existed for sharing implementation. <code>default</code> methods broke that wall: interfaces can now ship working method bodies too, so a class can pick up genuine, runnable behavior from <em>more than one</em> interface at once — something single-inheritance abstract classes could never do.</p>
+    <pre><code>interface Swimmer {
+    default void move() { System.out.println("Swimming"); }
+}
+interface Flyer {
+    default void takeOff() { System.out.println("Taking off"); }
+}
+
+// Duck writes ZERO method bodies, yet gets two independent, working
+// behaviors "for free" — one from each interface. An abstract class
+// couldn't do this, because a class can only extend one of them.
+class Duck implements Swimmer, Flyer { }
+
+new Duck().move();      // "Swimming"
+new Duck().takeOff();   // "Taking off"
+<button class="run-btn" data-target="out-blur">▶ Run</button></code></pre>
+    <div class="console-output" id="out-blur" data-output="Swimming
+Taking off" style="display:none;"></div>
+    <p>So why do abstract classes still exist at all? Because default methods narrow the gap without closing it:</p>
+    <ul>
+      <li><strong>No state.</strong> An interface still can't declare an instance field or a constructor — <code>Swimmer</code> and <code>Flyer</code> can hand out behavior, but never per-object data to go with it. <code>Vehicle</code>'s <code>brand</code> field has no interface equivalent.</li>
+      <li><strong>Still single vs. multiple inheritance.</strong> A class extends one abstract class but can implement any number of interfaces — that asymmetry is exactly why conflicting default methods need the diamond-problem rule above, and why conflicting <em>abstract-class</em> methods never arise in the first place: there's structurally only ever one superclass to inherit from.</li>
+      <li><strong>Different intent, even when the syntax overlaps.</strong> Default methods exist mainly so library designers can evolve an interface without breaking every class that already implements it (that's exactly how <code>Collection.forEach</code> was added in Java 8) — not as a general invitation to move all your shared logic into interfaces.</li>
+    </ul>
+
     <button class="mark-complete" data-section="basics-9">☐ Mark this topic complete</button>
   </section>
 
@@ -684,6 +746,10 @@ const QUIZ_DATA = [
     explain: "Interface fields are always public static final — effectively compile-time constants." },
   { q: "What must a class do if it implements two interfaces with conflicting default methods of the same signature?", options: ["Nothing — Java picks one automatically", "It must override that method itself", "The code fails to compile no matter what", "Only the first interface's default is used"], correct: 1,
     explain: "This is the interface 'diamond problem' — Java refuses to guess, so the implementing class must resolve the conflict explicitly." },
+  { q: "What can a class do with interfaces that it can NEVER do with abstract classes?", options: ["Declare instance fields", "Have a constructor", "Inherit working default-method behavior from more than one of them at once", "Override methods"], correct: 2,
+    explain: "A class can implement many interfaces (picking up multiple defaults), but can extend only one abstract class." },
+  { q: "Even after Java 8 added default methods, what can an interface still NEVER have?", options: ["Static methods", "Private methods", "Instance fields / constructors", "Abstract methods"], correct: 2,
+    explain: "Default methods add behavior, not state — interfaces still can't declare instance fields or constructors, only public static final constants." },
   { q: "Accessing an array index equal to its `.length` throws...", options: ["NullPointerException", "ArrayIndexOutOfBoundsException", "ClassCastException", "Nothing — it returns null"], correct: 1,
     explain: "Valid indices run from 0 to length - 1; length itself is one past the end." },
   { q: "Which keyword lets a class provide its own version of an inherited method?", options: ["extends", "implements", "@Override", "super"], correct: 2,
