@@ -15,7 +15,7 @@ Pages**.
 | `java11.html` | `var`, new `String`/`Files` methods, `HttpClient`, single-file source launching |
 | `java21.html` | Records, sealed classes, pattern matching, record patterns, virtual threads, sequenced collections, text blocks, structured concurrency |
 | `java25.html` | Compact source files & instance main methods, module imports, flexible constructor bodies, scoped values, structured concurrency (preview), primitive type patterns, GC/runtime improvements |
-| `advanced.html` | Collections internals, generics, concurrency, JVM memory & GC, design patterns, NIO |
+| `advanced.html` | Collections internals, generics, concurrency, JVM memory & GC, SOLID principles, design patterns, NIO |
 | `interview.html` | Searchable/filterable bank of Java interview Q&A |
 
 Every page includes runnable-feeling code demos, animated diagrams

@@ -147,8 +147,169 @@ try {
     <button class="mark-complete" data-section="advanced-5">☐ Mark this topic complete</button>
   </section>
 
+  <section class="topic reveal-up" id="solid">
+    <h2>6. SOLID Principles</h2>
+    <p class="section-lead">Five design principles (Robert C. Martin, "Uncle Bob") for keeping object-oriented code understandable, flexible, and maintainable — foundational to why the design patterns below are shaped the way they are.</p>
+
+    <table>
+      <thead><tr><th>Letter</th><th>Principle</th><th>One-line idea</th></tr></thead>
+      <tbody>
+        <tr><td><strong>S</strong></td><td>Single Responsibility</td><td>A class should have only one reason to change.</td></tr>
+        <tr><td><strong>O</strong></td><td>Open/Closed</td><td>Open for extension, closed for modification.</td></tr>
+        <tr><td><strong>L</strong></td><td>Liskov Substitution</td><td>A subclass must be usable anywhere its superclass is, without surprises.</td></tr>
+        <tr><td><strong>I</strong></td><td>Interface Segregation</td><td>Don't force a class to implement methods it doesn't need.</td></tr>
+        <tr><td><strong>D</strong></td><td>Dependency Inversion</td><td>Depend on abstractions, not concrete implementations.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-tabs">
+      <div class="code-tab-bar">
+        <button class="code-tab-btn active">S — Single Responsibility</button>
+        <button class="code-tab-btn">O — Open/Closed</button>
+        <button class="code-tab-btn">L — Liskov Substitution</button>
+        <button class="code-tab-btn">I — Interface Segregation</button>
+        <button class="code-tab-btn">D — Dependency Inversion</button>
+      </div>
+      <div class="code-tab-panel active"><pre><code>// ✗ Violates SRP — User has two reasons to change: its data shape,
+// and how/where it gets persisted.
+class User {
+    String name, email;
+
+    void saveToDatabase() {
+        System.out.println("Saving " + name + " to the database...");
+    }
+}
+
+// ✓ One responsibility each. A storage change only touches UserRepository;
+// a data-shape change only touches User.
+class User {
+    String name, email;
+}
+
+class UserRepository {
+    void save(User user) {
+        System.out.println("Saving " + user.name + " to the database...");
+    }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>// ✗ Violates OCP — every new shape means editing this method again.
+class AreaCalculator {
+    double area(Object shape) {
+        if (shape instanceof Circle c) return Math.PI * c.radius * c.radius;
+        if (shape instanceof Square s) return s.side * s.side;
+        // adding Triangle means coming back here and risking the existing cases
+        throw new IllegalArgumentException("Unknown shape");
+    }
+}
+
+// ✓ Open for extension, closed for modification — AreaCalculator never
+// changes again; each new shape is just a new class.
+interface Shape { double calculateArea(); }
+
+class Circle implements Shape {
+    double radius;
+    Circle(double radius) { this.radius = radius; }
+    public double calculateArea() { return Math.PI * radius * radius; }
+}
+
+class Square implements Shape {
+    double side;
+    Square(double side) { this.side = side; }
+    public double calculateArea() { return side * side; }
+}
+
+class AreaCalculator {
+    double total(List&lt;Shape&gt; shapes) {
+        return shapes.stream().mapToDouble(Shape::calculateArea).sum();
+    }
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>class Bird {
+    void fly() { System.out.println("Flying high!"); }
+}
+
+class Sparrow extends Bird { }      // fine — a Sparrow really can fly
+
+class Penguin extends Bird {          // ✗ violates LSP
+    @Override
+    void fly() {
+        throw new UnsupportedOperationException("Penguins can't fly!");
+    }
+}
+
+void letItFly(Bird bird) { bird.fly(); }
+
+letItFly(new Sparrow());    // works as callers expect
+letItFly(new Penguin());     // blows up at runtime — substituting a subclass broke the caller
+
+// Fix: don't bake "can fly" into the base class at all. Make Flyable its
+// own interface implemented only by birds that actually fly — then a
+// Penguin is just a Bird, and no caller ever assumes it can fly.</code></pre></div>
+      <div class="code-tab-panel"><pre><code>// ✗ Violates ISP — a fat interface forces Robot to "implement" eat(),
+// which it has no sensible behavior for.
+interface Worker {
+    void work();
+    void eat();
+}
+
+class Robot implements Worker {
+    public void work() { System.out.println("Robot working..."); }
+    public void eat() { throw new UnsupportedOperationException("Robots don't eat!"); }
+}
+
+// ✓ Split into focused interfaces — implement only what applies to you.
+interface Workable { void work(); }
+interface Eatable { void eat(); }
+
+class Human implements Workable, Eatable {
+    public void work() { System.out.println("Human working..."); }
+    public void eat() { System.out.println("Human eating..."); }
+}
+
+class Robot implements Workable {
+    public void work() { System.out.println("Robot working..."); }
+    // no eat() to fake — Robot was never forced to have one
+}</code></pre></div>
+      <div class="code-tab-panel"><pre><code>// ✗ Violates DIP — Car is welded to one concrete engine; swapping
+// engines (or unit-testing Car without a real V8) means editing Car itself.
+class V8Engine {
+    void start() { System.out.println("V8 engine roaring to life"); }
+}
+
+class Car {
+    private V8Engine engine = new V8Engine();
+    void start() { engine.start(); }
+}
+
+// ✓ Car depends on an abstraction — any Engine will do, injected from outside.
+interface Engine { void start(); }
+
+class V8Engine implements Engine {
+    public void start() { System.out.println("V8 engine roaring to life"); }
+}
+
+class ElectricEngine implements Engine {
+    public void start() { System.out.println("Electric motor humming to life"); }
+}
+
+class Car {
+    private final Engine engine;
+    Car(Engine engine) { this.engine = engine; }   // dependency injected via constructor
+    void start() { engine.start(); }
+}
+
+new Car(new V8Engine()).start();
+new Car(new ElectricEngine()).start();   // swapped with zero changes to Car
+<button class="run-btn" data-target="out-dip">▶ Run</button></code></pre>
+        <div class="console-output" id="out-dip" data-output="V8 engine roaring to life
+Electric motor humming to life" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="note tip">SOLID and interfaces go hand in hand: OCP, ISP, and DIP above are only possible <em>because</em> Java has interfaces — see <a href="basics.html#interfaces">Interfaces</a> for the language mechanics, and <a href="#design-patterns">Design Patterns</a> just below for named, reusable shapes (Strategy, Factory, Dependency Injection) that are really SOLID applied consistently.</div>
+    <button class="mark-complete" data-section="advanced-6">☐ Mark this topic complete</button>
+  </section>
+
   <section class="topic reveal-up" id="design-patterns">
-    <h2>6. Design Patterns</h2>
+    <h2>7. Design Patterns</h2>
     <div class="code-tabs">
       <div class="code-tab-bar">
         <button class="code-tab-btn active">Singleton</button>
@@ -184,17 +345,17 @@ class EventBus {
     void publish(String event) { observers.forEach(o -> o.update(event)); }
 }</code></pre></div>
     </div>
-    <button class="mark-complete" data-section="advanced-6">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="advanced-7">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="nio">
-    <h2>7. I/O &amp; NIO</h2>
+    <h2>8. I/O &amp; NIO</h2>
     <p class="section-lead">Classic <code>java.io</code> is stream-based and blocking; <code>java.nio</code> adds buffers, channels, and non-blocking selectors for scalable I/O.</p>
     <pre><code>// java.nio.file — the modern way to work with files
 Path path = Path.of("data.txt");
 List&lt;String&gt; lines = Files.readAllLines(path);
 Files.walk(Path.of(".")).filter(Files::isRegularFile).forEach(System.out::println);</code></pre>
-    <button class="mark-complete" data-section="advanced-7">☐ Mark this topic complete</button>
+    <button class="mark-complete" data-section="advanced-8">☐ Mark this topic complete</button>
   </section>
 
   <section class="topic reveal-up" id="quiz">
@@ -222,6 +383,16 @@ const QUIZ_DATA = [
     explain: "Each thread has its own stack of frames; objects themselves live on the shared heap." },
   { q: "Which GC is the default in modern JDKs (9+) aiming to balance throughput and pause time?", options: ["Serial GC", "G1", "Epsilon GC", "CMS"], correct: 1,
     explain: "G1 (Garbage-First) became the default collector starting with Java 9." },
+  { q: "A class that handles both business data AND saves itself to a database most directly violates...", options: ["Open/Closed Principle", "Single Responsibility Principle", "Liskov Substitution Principle", "Interface Segregation Principle"], correct: 1,
+    explain: "SRP says a class should have one reason to change — mixing data with persistence logic gives it two." },
+  { q: "Replacing a giant if/else chain of `instanceof` checks with an interface + one implementing class per case is an example of applying...", options: ["Liskov Substitution", "Open/Closed Principle", "Dependency Inversion", "Interface Segregation"], correct: 1,
+    explain: "Each new case becomes a new class — the dispatching code is never edited again, i.e. open for extension, closed for modification." },
+  { q: "A `Penguin extends Bird` that throws `UnsupportedOperationException` from an inherited `fly()` method violates...", options: ["Single Responsibility", "Open/Closed Principle", "Liskov Substitution Principle", "Dependency Inversion"], correct: 2,
+    explain: "LSP requires a subclass to be usable anywhere its superclass is expected — a Penguin breaking that contract at runtime is a textbook LSP violation." },
+  { q: "Splitting one large `Worker` interface into separate `Workable` and `Eatable` interfaces is applying...", options: ["Interface Segregation Principle", "Single Responsibility Principle", "Open/Closed Principle", "Liskov Substitution"], correct: 0,
+    explain: "ISP says a class shouldn't be forced to implement methods it doesn't need — smaller, focused interfaces let a Robot implement only Workable." },
+  { q: "A `Car` class that takes an `Engine engine` through its constructor, instead of creating `new V8Engine()` itself, is applying...", options: ["Liskov Substitution", "Interface Segregation", "Dependency Inversion Principle", "Single Responsibility"], correct: 2,
+    explain: "DIP: Car depends on the Engine abstraction, not a concrete implementation — the dependency is inverted and injected from outside." },
 ];
 </script>
 <script src="js/quiz.js"></script>
